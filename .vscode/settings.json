@@ -1,0 +1,6 @@
+{
+    "dotnet.defaultSolution": "api.sln",
+    "editor.wordWrap": "on",
+    "workbench.colorTheme": "One Monokai",
+    "dotnet.server.useOmnisharp": true
+}
