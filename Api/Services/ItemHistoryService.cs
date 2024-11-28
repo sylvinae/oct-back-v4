@@ -1,4 +1,4 @@
-using Api.Interfaces;
+using API.Interfaces;
 using API.Models.Item;
 using API.Utils;
 using Data.Db;
@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
 
-namespace Api.Services;
+namespace API.Services;
 
 public class ItemHistoryService(
     Context db,
@@ -32,13 +32,9 @@ public class ItemHistoryService(
             {
                 var itemHistoryEntity = PropCopier.Copy(
                     itemHistory,
-                    new ItemHistoryEntity
-                    {
-                        ItemId = itemHistory.ItemId,
-                        UserId = user.Id,
-                        Action = action.ToString(),
-                    }
+                    new ItemHistoryEntity { ItemId = itemHistory.ItemId, UserId = user.Id }
                 );
+                itemHistoryEntity.Action = action.ToString();
                 var result = await _db.ItemHistories.AddAsync(itemHistoryEntity);
                 _log.LogInformation(
                     "Added {action} history to item {id}",

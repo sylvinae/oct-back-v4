@@ -1,14 +1,16 @@
-using System.Linq;
+using System.Resources;
 using API.Interfaces;
-using Api.Interfaces;
 using API.Models.Item;
-using Api.Services;
 using API.Utils;
+using API.Validators;
 using Data.Db;
 using Data.Entities.Item;
 using Data.Entities.User;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
+// using Sprache;
 
 namespace API.Services;
 
@@ -17,7 +19,9 @@ public class ItemService(
     ILogger<ItemService> log,
     UserManager<UserEntity> userManager,
     IItemHistoryService ih,
-    IHttpContextAccessor httpContextAccessor
+    IHttpContextAccessor httpContextAccessor,
+    IValidator<CreateItemModel> createValidator,
+    IValidator<UpdateItemModel> updateValidator
 ) : IItemService
 {
     private readonly Context _db = db;
@@ -25,102 +29,186 @@ public class ItemService(
     private readonly UserManager<UserEntity> _userManager = userManager;
     private readonly IItemHistoryService _ih = ih;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private readonly IValidator<CreateItemModel> _createValidator = createValidator;
+    private readonly IValidator<UpdateItemModel> _updateValidator = updateValidator;
 
     //create items
-    public async Task<ResponseItemModel?> CreateItem(CreateItemModel item)
+    //model validation done in endpoint
+    public async Task<(FailedResponseItemModel? failed, ResponseItemModel? created)> CreateItem(
+        CreateItemModel item
+    )
     {
+        _log.LogDebug("Create Item called.");
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+
         try
         {
             var hash = Cryptics.ComputeHash(item);
-            var existingItem = await _db.Items.FirstOrDefaultAsync(i => i.Hash == hash);
 
+            var existingItem = await _db.Items.FirstOrDefaultAsync(i => i.Hash == hash);
             if (existingItem != null)
             {
                 _log.LogWarning(
-                    "Item already exists: {Brand} - {Generic}.",
+                    "Item already exists: {Brand} - {Generic}",
                     item.Brand,
                     item.Generic
                 );
-                return null;
+
+                var failedResponse = PropCopier.Copy(
+                    existingItem,
+                    new FailedResponseItemModel { Error = "Item already exists." }
+                );
+                return (failedResponse, null);
             }
 
-            // Expiry handling
-            if (!item.HasExpiry)
-                item.Expiry = null;
-            else if (item.Expiry != null)
-            {
-                if (DateTime.TryParse(item.Expiry, out DateTime parsedDate))
-                {
-                    DateTime currentDate = DateTime.Today;
-                    item.IsExpired = DateTime.Compare(parsedDate, currentDate) <= 0;
+            var itemEntity = PropCopier.Copy(
+                item,
+                new ItemEntity { Hash = hash, IsLow = item.Stock <= item.LowThreshold }
+            );
 
-                    // Format the date to specific format
-                    item.Expiry = parsedDate.ToString("yyyy-MM-dd HH:mm:ss");
-                }
-                else
-                {
-                    _log.LogWarning(
-                        "Invalid date format for item: {Brand} - {Generic}.",
-                        item.Brand,
-                        item.Generic
-                    );
-                    return null;
-                }
-            }
-
-            // Low stock calculation
-            item.IsLow = item.Stock <= item.LowThreshold;
-
-            // Create entity
-            var itemEntity = PropCopier.Copy(item, new ItemEntity { Hash = hash });
             var result = await _db.Items.AddAsync(itemEntity);
 
-            // Add item history
             await _ih.AddItemHistory(
                 PropCopier.Copy(
-                    result.Entity,
-                    new AdddItemHistoryModel { ItemId = result.Entity.Id }
+                    item,
+                    new AdddItemHistoryModel { ItemId = result.Entity.Id, Hash = hash }
                 ),
                 ActionType.Created
             );
 
-            _log.LogInformation("Created item {ItemId}.", result.Entity.Id);
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
 
-            return PropCopier.Copy(item, new ResponseItemModel());
+            _log.LogInformation("Successfully created item {ItemId}. Exiting.", result.Entity.Id);
+
+            var createdResponse = PropCopier.Copy(
+                result.Entity,
+                new ResponseItemModel { ItemHistory = null }
+            );
+
+            return (null, createdResponse);
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
             _log.LogError(
                 ex,
-                "Failed to create item {Brand} - {Generic}.",
+                "Failed to create item {Brand} - {Generic}. Rolling back changes.",
                 item.Brand,
                 item.Generic
             );
 
-            return null;
+            var failedResponse = PropCopier.Copy(
+                item,
+                new FailedResponseItemModel
+                {
+                    Error = "An unexpected error occurred. Please try again later.",
+                }
+            );
+            _log.LogInformation("Exiting due to exceptions.");
+
+            return (failedResponse, null);
         }
     }
 
+    //create items
+    //manual model validation
     public async Task<(
-        List<ResponseItemModel> failed,
+        List<FailedResponseItemModel> failed,
         List<ResponseItemModel> created
     )> CreateItems(List<CreateItemModel> items)
     {
-        var (created, failed) = (new List<ResponseItemModel>(), new List<ResponseItemModel>());
+        _log.LogInformation("Create Items called.");
+        var failed = new List<FailedResponseItemModel>();
+        var created = new List<ResponseItemModel>();
 
-        foreach (var item in items)
+        if (items == null || items.Count == 0)
         {
-            var result = await CreateItem(item);
-
-            if (result != null)
-                created.Add(result);
-            else
-                failed.Add(PropCopier.Copy(item, new ResponseItemModel()));
+            _log.LogInformation("No items to create.");
+            return (failed, created);
         }
 
-        await _db.SaveChangesAsync();
-        _log.LogInformation("Finished processing all items.");
-        return (failed, created);
+        try
+        {
+            foreach (var item in items)
+            {
+                using var transaction = await _db.Database.BeginTransactionAsync();
+
+                try
+                {
+                    (bool isValid, string? error) = await SuperValidator.Check(
+                        _createValidator,
+                        item
+                    );
+
+                    if (!isValid && error != null)
+                    {
+                        _log.LogWarning("Model state invalid. {x}", error);
+                        failed.Add(
+                            PropCopier.Copy(item, new FailedResponseItemModel { Error = error })
+                        );
+                        continue;
+                    }
+
+                    var hash = Cryptics.ComputeHash(item);
+                    var existingItem = await _db.Items.FirstOrDefaultAsync(i => i.Hash == hash);
+
+                    if (existingItem != null)
+                    {
+                        _log.LogWarning(
+                            "Item already exists: {Brand} - {Generic}.",
+                            item.Brand,
+                            item.Generic
+                        );
+                        failed.Add(PropCopier.Copy(existingItem, new FailedResponseItemModel()));
+                        continue;
+                    }
+
+                    var itemEntity = PropCopier.Copy(
+                        item,
+                        new ItemEntity { Hash = hash, IsLow = item.Stock <= item.LowThreshold }
+                    );
+
+                    var result = await _db.Items.AddAsync(itemEntity);
+
+                    await _ih.AddItemHistory(
+                        PropCopier.Copy(
+                            item,
+                            new AdddItemHistoryModel { ItemId = result.Entity.Id, Hash = hash }
+                        ),
+                        ActionType.Created
+                    );
+
+                    await _db.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    created.Add(
+                        PropCopier.Copy(itemEntity, new ResponseItemModel { ItemHistory = null })
+                    );
+
+                    _log.LogInformation("Created item with ID {ItemId}.", itemEntity.Id);
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(
+                        ex,
+                        "An error occurred while creating item {Brand} - {Generic}.",
+                        item.Brand,
+                        item.Generic
+                    );
+
+                    await transaction.RollbackAsync();
+                }
+            }
+
+            _log.LogInformation("Finished creating items. Exiting.");
+            return (failed, created);
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, "An unexpected error occurred while processing items.");
+            return (failed, created);
+        }
     }
 
     //get items
@@ -146,7 +234,6 @@ public class ItemService(
                         item,
                         new ResponseItemModel
                         {
-                            Id = item.Id,
                             ItemHistory = includeHistory
                                 ? item
                                     .ItemHistory?.Select(h =>
@@ -154,7 +241,6 @@ public class ItemService(
                                             h,
                                             new ResponseItemHistoryModel
                                             {
-                                                Id = h.Id,
                                                 UserId = h.UserId,
                                                 ItemId = h.ItemId,
                                             }
@@ -190,7 +276,6 @@ public class ItemService(
                 item,
                 new ResponseItemModel
                 {
-                    Id = item.Id,
                     ItemHistory = includeHistory
                         ? item
                             .ItemHistory?.Select(h =>
@@ -198,7 +283,6 @@ public class ItemService(
                                     h,
                                     new ResponseItemHistoryModel
                                     {
-                                        Id = h.Id,
                                         UserId = h.UserId,
                                         ItemId = h.ItemId,
                                     }
@@ -218,13 +302,16 @@ public class ItemService(
     }
 
     public async Task<(
-        List<ResponseItemModel> failed,
+        List<FailedResponseItemModel> failed,
         List<ResponseItemModel> updated
     )> UpdateItems(List<UpdateItemModel> items)
     {
-        var (updated, failed) = (new List<ResponseItemModel>(), new List<ResponseItemModel>());
+        var (updated, failed) = (
+            new List<ResponseItemModel>(),
+            new List<FailedResponseItemModel>()
+        );
 
-        if (items == null || !items.Any())
+        if (items == null || items.Count == 0)
         {
             _log.LogInformation("No items to update.");
             return (failed, updated);
@@ -236,11 +323,30 @@ public class ItemService(
         {
             foreach (var item in items)
             {
+                (bool isValid, string? error) = await SuperValidator.Check(_updateValidator, item);
+
+                if (!isValid && error != null)
+                {
+                    _log.LogWarning("Model state invalid. {x}", error);
+                    failed.Add(
+                        PropCopier.Copy(item, new FailedResponseItemModel { Error = error })
+                    );
+                    continue;
+                }
+
                 var existingItem = await _db.Items.FindAsync(item.Id);
                 if (existingItem == null)
                 {
                     _log.LogWarning("Item with ID {ItemId} not found.", item.Id);
-                    failed.Add(PropCopier.Copy(item, new ResponseItemModel()));
+                    failed.Add(
+                        PropCopier.Copy(
+                            item,
+                            new FailedResponseItemModel
+                            {
+                                Error = $"Item with ID {item.Id} not found.",
+                            }
+                        )
+                    );
                     continue;
                 }
 
@@ -248,6 +354,15 @@ public class ItemService(
                 if (existingItem.Hash == newHash)
                 {
                     _log.LogInformation("Item with ID {ItemId} has no changes. Skipped.", item.Id);
+                    failed.Add(
+                        PropCopier.Copy(
+                            item,
+                            new FailedResponseItemModel
+                            {
+                                Error = $"Item with ID {item.Id} has no changes.Skipped.",
+                            }
+                        )
+                    );
                     continue;
                 }
 
@@ -265,11 +380,8 @@ public class ItemService(
                     ),
                     ActionType.Updated
                 );
-            }
-
-            if (updated.Any())
-            {
                 await _db.SaveChangesAsync();
+
                 await transaction.CommitAsync();
                 _log.LogInformation("Successfully saved changes to DB.");
             }
@@ -284,58 +396,93 @@ public class ItemService(
         }
     }
 
-    public async Task<ResponseItemModel?> UpdateItem(UpdateItemModel item)
+    public async Task<(FailedResponseItemModel? failed, ResponseItemModel? created)> UpdateItem(
+        UpdateItemModel item
+    )
     {
-        using var transaction = await _db.Database.BeginTransactionAsync();
-        var newHash = "";
         try
         {
             var existingItem = await _db.Items.FindAsync(item.Id);
             if (existingItem == null)
             {
                 _log.LogWarning("Item with ID {ItemId} not found.", item.Id);
-                return null;
+                return (
+                    PropCopier.Copy(
+                        item,
+                        new FailedResponseItemModel { Error = $"Item with ID {item.Id} not found." }
+                    ),
+                    null
+                );
             }
 
-            newHash = Cryptics.ComputeHash(item);
+            string? newHash = Cryptics.ComputeHash(item);
             if (existingItem.Hash == newHash)
             {
                 _log.LogInformation("Item with ID {ItemId} has no changes.", item.Id);
-                return null;
+                return (
+                    PropCopier.Copy(
+                        item,
+                        new FailedResponseItemModel
+                        {
+                            Error = $"Item with ID {item.Id} has no changes.",
+                        }
+                    ),
+                    null
+                );
             }
 
-            _log.LogInformation("Updating item with ID {ItemId}.", existingItem.Id);
+            using var transaction = await _db.Database.BeginTransactionAsync();
 
-            item.Hash = newHash;
-            _db.Entry(existingItem).CurrentValues.SetValues(item);
+            try
+            {
+                item.Hash = newHash;
+                _db.Entry(existingItem).CurrentValues.SetValues(item);
 
-            await _ih.AddItemHistory(
-                PropCopier.Copy(
-                    item,
-                    new AdddItemHistoryModel { ItemId = item.Id, Hash = newHash }
-                ),
-                ActionType.Updated
-            );
+                await _ih.AddItemHistory(
+                    PropCopier.Copy(
+                        item,
+                        new AdddItemHistoryModel { ItemId = item.Id, Hash = newHash }
+                    ),
+                    ActionType.Updated
+                );
 
-            await _db.SaveChangesAsync();
-            await transaction.CommitAsync();
-            _log.LogInformation(
-                "Successfully updated item and added item history for item {ItemId}.",
-                item.Id
-            );
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            _log.LogError(ex, "Concurrency conflict for item {ItemId}.", item.Id);
-            await transaction.RollbackAsync();
+                await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _log.LogInformation(
+                    "Successfully updated item and added item history for item {ItemId}.",
+                    item.Id
+                );
+
+                return (null, PropCopier.Copy(existingItem, new ResponseItemModel()));
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Failed to update item with ID {ItemId}.", item.Id);
+                await transaction.RollbackAsync();
+                return (
+                    PropCopier.Copy(
+                        item,
+                        new FailedResponseItemModel
+                        {
+                            Error = "Failed to update item due to an error.",
+                        }
+                    ),
+                    null
+                );
+            }
         }
         catch (Exception ex)
         {
-            _log.LogError(ex, "Failed to update item with ID {ItemId}.", item.Id);
-            await transaction.RollbackAsync();
+            _log.LogError(ex, "Unexpected error occurred while processing item {ItemId}.", item.Id);
+            return (
+                PropCopier.Copy(
+                    item,
+                    new FailedResponseItemModel { Error = "An unexpected error occurred." }
+                ),
+                null
+            );
         }
-
-        return PropCopier.Copy(item, new ResponseItemModel());
     }
 
     //delete items
@@ -343,7 +490,7 @@ public class ItemService(
     {
         var (deleted, failed) = (new List<Guid>(), new List<Guid>());
 
-        if (itemIds == null || !itemIds.Any())
+        if (itemIds == null || itemIds.Count == 0)
         {
             _log.LogInformation("No items to delete.");
             return (failed, deleted);
@@ -367,19 +514,22 @@ public class ItemService(
                 deleted.Add(id);
 
                 await _ih.AddItemHistory(
-                    PropCopier.Copy(item, new AdddItemHistoryModel { ItemId = item.Id }),
-                    ActionType.Deleted
+                    PropCopier.Copy(
+                        item,
+                        new AdddItemHistoryModel { ItemId = item.Id, Hash = item.Hash }
+                    ),
+                    ActionType.Updated
                 );
             }
 
-            if (deleted.Any())
-            {
-                await _db.SaveChangesAsync();
-                await transaction.CommitAsync();
-                _log.LogInformation("Successfully deleted items and added history.");
-            }
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
 
-            return (failed, deleted);
+            _log.LogInformation(
+                "Successfully deleted {DeletedCount} items and added history for {DeletedCount} items.",
+                deleted.Count,
+                deleted.Count
+            );
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -418,6 +568,7 @@ public class ItemService(
             );
 
             await _db.SaveChangesAsync();
+
             await transaction.CommitAsync();
 
             _log.LogInformation(
@@ -450,65 +601,61 @@ public class ItemService(
         var failed = new List<Guid>();
         var restored = new List<Guid>();
 
-        using var transaction = await _db.Database.BeginTransactionAsync();
-
-        try
+        foreach (var itemId in itemIds)
         {
-            var items = await _db.Items.Where(i => itemIds.Contains(i.Id)).ToListAsync();
+            using var transaction = await _db.Database.BeginTransactionAsync();
 
-            foreach (var item in items)
+            try
             {
-                try
+                var item = await _db.Items.FindAsync(itemId);
+                if (item == null)
                 {
-                    if (item.IsDeleted == false)
-                    {
-                        _log.LogInformation("Item {ItemId} is already restored.", item.Id);
-                        continue;
-                    }
-
-                    item.IsDeleted = false;
-                    restored.Add(item.Id);
-
-                    _log.LogInformation("Restoring item {ItemId}.", item.Id);
-
-                    await _ih.AddItemHistory(
-                        PropCopier.Copy(item, new AdddItemHistoryModel { ItemId = item.Id }),
-                        ActionType.Restored
-                    );
+                    _log.LogWarning("Item with ID {ItemId} not found.", itemId);
+                    failed.Add(itemId);
+                    continue;
                 }
-                catch (DbUpdateConcurrencyException ex)
+
+                if (item.IsDeleted == false)
                 {
-                    _log.LogError(ex, "Concurrency conflict for item {ItemId}.", item.Id);
-                    failed.Add(item.Id);
+                    _log.LogInformation("Item {ItemId} is already restored.", itemId);
+                    continue;
                 }
-                catch (Exception ex)
-                {
-                    _log.LogError(ex, "Error while restoring item {ItemId}.", item.Id);
-                    failed.Add(item.Id);
-                }
-            }
 
-            if (restored.Any())
-            {
+                item.IsDeleted = false;
+                restored.Add(itemId);
+
+                _log.LogInformation("Restoring item {ItemId}.", itemId);
+
+                await _ih.AddItemHistory(
+                    PropCopier.Copy(item, new AdddItemHistoryModel { ItemId = item.Id }),
+                    ActionType.Restored
+                );
+
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
-                _log.LogInformation("Successfully restored items.");
+                _log.LogInformation("Successfully restored item with ID {ItemId}.", itemId);
             }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _log.LogError(ex, "Concurrency conflict for item {ItemId}.", itemId);
+                await transaction.RollbackAsync();
+                failed.Add(itemId);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Error while restoring item with ID {ItemId}.", itemId);
+                await transaction.RollbackAsync();
+                failed.Add(itemId);
+            }
+        }
 
-            return (failed, restored);
-        }
-        catch (Exception ex)
-        {
-            _log.LogError(ex, "An error occurred while restoring items.");
-            await transaction.RollbackAsync();
-            failed.AddRange(itemIds);
-            return (failed, restored);
-        }
+        return (failed, restored);
     }
 
     public async Task<Guid?> RestoreItem(Guid itemId)
     {
         using var transaction = await _db.Database.BeginTransactionAsync();
+
         try
         {
             var item = await _db.Items.FindAsync(itemId);
@@ -525,25 +672,31 @@ public class ItemService(
             }
 
             item.IsDeleted = false;
+
             await _ih.AddItemHistory(
                 PropCopier.Copy(item, new AdddItemHistoryModel { ItemId = item.Id }),
                 ActionType.Restored
             );
 
             await _db.SaveChangesAsync();
+
             await transaction.CommitAsync();
 
-            _log.LogInformation("Successfully restored item {ItemId}.", itemId);
+            _log.LogInformation("Successfully restored item with ID {ItemId}.", itemId);
             return itemId;
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            _log.LogError(ex, "Concurrency conflict for item {ItemId}.", itemId);
+            _log.LogError(
+                ex,
+                "Concurrency conflict while restoring item with ID {ItemId}.",
+                itemId
+            );
             await transaction.RollbackAsync();
         }
         catch (Exception ex)
         {
-            _log.LogError(ex, "Error restoring item {ItemId}.", itemId);
+            _log.LogError(ex, "An error occurred while restoring item with ID {ItemId}.", itemId);
             await transaction.RollbackAsync();
         }
 
@@ -598,39 +751,6 @@ public class ItemService(
                 .Take(limit)
                 .ToListAsync();
 
-            //1 loop based idk looks simpler
-            // List<ResponseItemModel> respo = [];
-            // foreach (var item in items)
-            // {
-            //     List<ResponseItemHistoryModel> history = [];
-            //     foreach (var h in item.ItemHistory)
-            //     {
-            //         history.Add(
-            //             PropCopier.Copy(
-            //                 h,
-            //                 new ResponseItemHistoryModel
-            //                 {
-            //                     Id = h.Id,
-            //                     UserId = h.UserId,
-            //                     ItemId = h.ItemId,
-            //                 }
-            //             )
-            //         );
-            //     }
-
-            //     respo.Add(
-            //         PropCopier.Copy(
-            //             item,
-            //             new ResponseItemModel
-            //             {
-            //                 Id = item.Id,
-            //                 ItemHistory = includeHistory ? history : null,
-            //             }
-            //         )
-            //     );
-            // }
-
-            //2 linq based, scarier but fancier
             var response = items
                 .Select(item =>
                     PropCopier.Copy(

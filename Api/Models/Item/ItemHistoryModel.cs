@@ -73,7 +73,7 @@ public class BaseItemHistoryModel
     public string Hash { get; set; } = null!;
 
     [JsonProperty("action")]
-    public string Action { get; set; } = null!;
+    public string? Action { get; set; }
 }
 
 public class AdddItemHistoryModel : BaseItemHistoryModel { }

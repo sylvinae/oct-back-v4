@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Api.Utils;
+namespace API.Utils;
 
 public static class DbInitializer
 {

@@ -6,7 +6,7 @@ namespace API.Interfaces;
 public interface IItemService
 {
     //multiple items
-    Task<(List<ResponseItemModel> failed, List<ResponseItemModel> created)> CreateItems(
+    Task<(List<FailedResponseItemModel> failed, List<ResponseItemModel> created)> CreateItems(
         List<CreateItemModel> items
     );
     Task<(List<ResponseItemModel> items, int totalCount)> GetItems(
@@ -14,7 +14,7 @@ public interface IItemService
         int limit,
         bool includeHistory
     );
-    Task<(List<ResponseItemModel> failed, List<ResponseItemModel> updated)> UpdateItems(
+    Task<(List<FailedResponseItemModel> failed, List<ResponseItemModel> updated)> UpdateItems(
         List<UpdateItemModel> items
     );
     Task<(List<Guid> failed, List<Guid> deleted)> DeleteItems(List<Guid> itemIds);
@@ -32,9 +32,13 @@ public interface IItemService
     );
 
     //single items
-    Task<ResponseItemModel?> CreateItem(CreateItemModel item);
+    Task<(FailedResponseItemModel? failed, ResponseItemModel? created)> CreateItem(
+        CreateItemModel item
+    );
     Task<ResponseItemModel?> GetItem(Guid id, bool includeHistory);
-    Task<ResponseItemModel?> UpdateItem(UpdateItemModel item);
+    Task<(FailedResponseItemModel? failed, ResponseItemModel? created)> UpdateItem(
+        UpdateItemModel item
+    );
     Task<Guid?> DeleteItem(Guid itemId);
     Task<Guid?> RestoreItem(Guid itemId);
 }

@@ -1,10 +1,17 @@
 using System.Collections.Generic;
 using System.Security.Claims;
+using API.Filters;
 using API.Interfaces;
 using API.Models.Item;
+using API.Services;
+using API.Validators;
 using Data.Entities.Item;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using SQLitePCL;
 
 namespace API.Endpoints;
 
@@ -14,17 +21,26 @@ public static class ItemEndpoints
     {
         var itemGroup = app.MapGroup("/api/items");
 
-        itemGroup.MapGet("/some", GetItems).AllowAnonymous();
-        itemGroup.MapGet("/one", GetItem).AllowAnonymous();
-        itemGroup.MapPost("/some", CreateItems).RequireAuthorization("admin");
-        itemGroup.MapPost("/one", CreateItem).RequireAuthorization("admin");
+        //Get Routes
+        itemGroup.MapGet("/{id}", GetItem).AllowAnonymous();
+        itemGroup.MapGet("/", GetItems).AllowAnonymous();
         itemGroup.MapPost("/search", SearchItems).AllowAnonymous();
-        itemGroup.MapPut("/some", UpdateItems).RequireAuthorization("admin");
-        itemGroup.MapPut("/one", UpdateItem).RequireAuthorization("admin");
-        itemGroup.MapDelete("/some", DeleteItems).RequireAuthorization("admin");
-        itemGroup.MapDelete("/one", DeleteItem).RequireAuthorization("admin");
-        itemGroup.MapPut("/restore/some", RestoreItems).RequireAuthorization("admin");
-        itemGroup.MapPut("/restore/one", RestoreItem).RequireAuthorization("admin");
+
+        //Create Routes
+        itemGroup.MapPost("/", CreateItem).AddEndpointFilter<ValidationFilter<CreateItemModel>>();
+        itemGroup.MapPost("/batch", CreateItems);
+
+        // Update Routes
+        itemGroup.MapPut("/", UpdateItem).AddEndpointFilter<ValidationFilter<UpdateItemModel>>();
+        itemGroup.MapPut("/batch", UpdateItems);
+
+        // Delete Routes
+        itemGroup.MapDelete("/{id}", DeleteItem);
+        itemGroup.MapDelete("/batch", DeleteItems);
+
+        // Restore Routes
+        itemGroup.MapPut("/restore/{id}", RestoreItem);
+        itemGroup.MapPut("/restore/batch", RestoreItems);
     }
 
     private static async Task<IResult> GetItems(
@@ -34,20 +50,45 @@ public static class ItemEndpoints
         [FromQuery] bool includeHistory = false
     )
     {
-        var (response, totalCount) = await itemService.GetItems(page, limit, includeHistory);
-        return totalCount == 0
-            ? Results.NotFound()
-            : Results.Ok(new { items = response, totalCount });
+        try
+        {
+            var (response, totalCount) = await itemService.GetItems(page, limit, includeHistory);
+            return totalCount == 0
+                ? Results.NotFound()
+                : Results.Ok(
+                    new
+                    {
+                        items = response,
+                        totalCount,
+                        page,
+                        limit,
+                        includeHistory,
+                    }
+                );
+        }
+        catch (Exception ex)
+        {
+            return Results.BadRequest(new { message = ex.ToString() });
+        }
     }
 
     private static async Task<IResult> GetItem(
-        [FromQuery] Guid id,
+        Guid id,
         [FromServices] IItemService itemService,
         [FromQuery] bool includeHistory = false
     )
     {
-        var item = await itemService.GetItem(id, includeHistory);
-        return item is not null ? Results.Ok(new { item = item }) : Results.NotFound();
+        try
+        {
+            var item = await itemService.GetItem(id, includeHistory);
+            return item is not null
+                ? Results.Ok(new { item = item, includeHistory })
+                : Results.NotFound();
+        }
+        catch (Exception ex)
+        {
+            return Results.BadRequest(new { message = ex.ToString() });
+        }
     }
 
     private static async Task<IResult> CreateItems(
@@ -60,7 +101,7 @@ public static class ItemEndpoints
         if (created.Count == 0)
             return Results.BadRequest(new { failed = failed });
         if (failed.Count != 0)
-            return Results.BadRequest(new { failed = failed, created = created });
+            return Results.Ok(new { failed = failed, created = created });
 
         return Results.Created("/items", new { created = created });
     }
@@ -70,10 +111,10 @@ public static class ItemEndpoints
         [FromServices] IItemService itemService
     )
     {
-        var created = await itemService.CreateItem(item);
+        var (failed, created) = await itemService.CreateItem(item);
         return created != null
             ? Results.Created(created.Id.ToString(), new { created = created })
-            : Results.BadRequest(new { failed = item });
+            : Results.BadRequest(new { failed = failed });
     }
 
     private static async Task<IResult> UpdateItems(
@@ -95,10 +136,10 @@ public static class ItemEndpoints
         [FromServices] IItemService itemService
     )
     {
-        var updated = await itemService.UpdateItem(updateItemModel);
+        var (failed, updated) = await itemService.UpdateItem(updateItemModel);
 
         return updated == null
-            ? Results.BadRequest(new { failed = updateItemModel })
+            ? Results.BadRequest(new { failed = failed })
             : Results.Ok(new { updated = updated });
     }
 
@@ -116,10 +157,7 @@ public static class ItemEndpoints
         return Results.Ok(new { deleted = deleted });
     }
 
-    private static async Task<IResult> DeleteItem(
-        [FromBody] Guid id,
-        [FromServices] IItemService itemService
-    )
+    private static async Task<IResult> DeleteItem(Guid id, [FromServices] IItemService itemService)
     {
         var deleted = await itemService.DeleteItem(id);
 

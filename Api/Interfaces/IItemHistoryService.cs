@@ -1,6 +1,6 @@
 using API.Models.Item;
 
-namespace Api.Interfaces;
+namespace API.Interfaces;
 
 public interface IItemHistoryService
 {

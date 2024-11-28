@@ -1,11 +1,14 @@
 using System.Reflection;
 using API.Endpoints;
 using API.Interfaces;
+using API.Models.Item;
+using API.Services;
 using API.Services.User;
-using Api.Utils;
 using API.Utils;
+using API.Validators;
 using Data.Db;
 using Data.Entities.User;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,9 +16,9 @@ builder.Services.AddLogging();
 builder.Services.AddCustomServices(Assembly.GetExecutingAssembly());
 builder.Services.AddAuthorization();
 
-// builder.Services.AddAuthentication().AddCookie(IdentityConstants.ApplicationScheme);
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// builder.Services.AddAuthentication();
+builder.Services.AddAuthentication();
 
 builder
     .Services.AddIdentity<UserEntity, IdentityRole<Guid>>(options =>
@@ -26,22 +29,34 @@ builder
     .AddEntityFrameworkStores<Context>()
     .AddDefaultTokenProviders();
 
-// Register services
-
-
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<Context>();
 builder.Services.AddAuthorizationPolicies();
 var app = builder.Build();
 
 // Enable Swagger in development
-if (app.Environment.IsDevelopment())
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI();
+// }
+
+app.UseStatusCodePages(async context =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    if (context.HttpContext.Response.StatusCode == StatusCodes.Status400BadRequest)
+    {
+        // Customize the message for 400 errors
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"message\": \"Invalid request. Please check your query parameters or request format.\"}"
+        );
+    }
+});
+
+// Optionally add exception handler middleware for general exception handling
+app.UseExceptionHandler("/error"); // Redirects to a global error handler
 
 // Initialize database and seed roles/users
 using (var scope = app.Services.CreateScope())
@@ -56,6 +71,7 @@ using (var scope = app.Services.CreateScope())
 // Map endpoints
 app.MapUserEndpoints();
 app.MapItemEndpoints();
+app.MapErrorEndpoints();
 
 // Middleware
 // app.UseHttpsRedirection();

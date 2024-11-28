@@ -39,11 +39,8 @@ public class BaseItemModel
     [JsonProperty("lowThreshold")]
     public int LowThreshold { get; set; }
 
-    [JsonProperty("isLow")]
-    public bool IsLow { get; set; }
-
     [JsonProperty("isReagent")]
-    public bool IsReagent { get; set; } = false;
+    public bool IsReagent { get; set; }
 
     [JsonProperty("usesLeft")]
     public int? UsesLeft { get; set; }
@@ -52,16 +49,10 @@ public class BaseItemModel
     public int? UsesMax { get; set; }
 
     [JsonProperty("hasExpiry")]
-    public bool HasExpiry { get; set; } = true;
+    public bool HasExpiry { get; set; }
 
     [JsonProperty("expiry")]
     public string? Expiry { get; set; }
-
-    [JsonProperty("isExpired")]
-    public bool IsExpired { get; set; } = false;
-
-    [JsonProperty("isDeleted")]
-    public bool IsDeleted { get; set; } = false;
 }
 
 public class CreateItemModel : BaseItemModel { }
@@ -72,17 +63,32 @@ public class UpdateItemModel : BaseItemModel
     public Guid Id { get; set; }
 
     [JsonProperty("hash")]
-    public string? Hash { get; set; }
+    public string Hash { get; set; } = null!;
 }
 
 public class ResponseItemModel : BaseItemModel
 {
     [JsonProperty("id")]
-    public Guid? Id { get; set; }
+    public Guid Id { get; set; }
 
     [JsonProperty("hash")]
-    public string? Hash { get; set; }
+    public string Hash { get; set; } = null!;
+
+    [JsonProperty("isLow")]
+    public bool IsLow { get; set; }
+
+    [JsonProperty("isExpired")]
+    public bool IsExpired { get; set; } = false;
+
+    [JsonProperty("isDeleted")]
+    public bool IsDeleted { get; set; } = false;
 
     [JsonProperty("itemHistory")]
     public ICollection<ResponseItemHistoryModel>? ItemHistory { get; set; } = [];
+}
+
+public class FailedResponseItemModel : ResponseItemModel
+{
+    [JsonProperty("error")]
+    public string Error { get; set; } = null!;
 }
