@@ -1,18 +1,19 @@
+using API.Entities.Item;
 using API.Models.Item;
-using Data.Entities.Item;
 
 namespace API.Interfaces;
 
 public interface IItemService
 {
-    //multiple items
     Task<(List<FailedResponseItemModel> failed, List<ResponseItemModel> created)> CreateItems(
         List<CreateItemModel> items
     );
     Task<(List<ResponseItemModel> items, int totalCount)> GetItems(
         int page,
         int limit,
-        bool includeHistory
+        bool includeHistory,
+        bool isDeleted,
+        bool isExpired
     );
     Task<(List<FailedResponseItemModel> failed, List<ResponseItemModel> updated)> UpdateItems(
         List<UpdateItemModel> items
@@ -31,14 +32,5 @@ public interface IItemService
         bool? hasExpiry
     );
 
-    //single items
-    Task<(FailedResponseItemModel? failed, ResponseItemModel? created)> CreateItem(
-        CreateItemModel item
-    );
     Task<ResponseItemModel?> GetItem(Guid id, bool includeHistory);
-    Task<(FailedResponseItemModel? failed, ResponseItemModel? created)> UpdateItem(
-        UpdateItemModel item
-    );
-    Task<Guid?> DeleteItem(Guid itemId);
-    Task<Guid?> RestoreItem(Guid itemId);
 }

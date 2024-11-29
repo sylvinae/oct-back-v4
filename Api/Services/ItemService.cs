@@ -1,14 +1,15 @@
 using System.Resources;
+using API.Db;
+using API.Entities.Item;
+using API.Entities.User;
 using API.Interfaces;
 using API.Models.Item;
 using API.Utils;
 using API.Validators;
-using Data.Db;
-using Data.Entities.Item;
-using Data.Entities.User;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 // using Sprache;
 
@@ -22,85 +23,6 @@ public class ItemService(
     IValidator<UpdateItemModel> _updateValidator
 ) : IItemService
 {
-    //create items
-    //model validation done in endpoint
-    public async Task<(FailedResponseItemModel? failed, ResponseItemModel? created)> CreateItem(
-        CreateItemModel item
-    )
-    {
-        _log.LogDebug("Create Item called.");
-        await using var transaction = await _db.Database.BeginTransactionAsync();
-
-        try
-        {
-            var hash = Cryptics.ComputeHash(item);
-
-            var existingItem = await _db.Items.FirstOrDefaultAsync(i => i.Hash == hash);
-            if (existingItem != null)
-            {
-                _log.LogWarning(
-                    "Item already exists: {Brand} - {Generic}",
-                    item.Brand,
-                    item.Generic
-                );
-
-                var failedResponse = PropCopier.Copy(
-                    existingItem,
-                    new FailedResponseItemModel { Error = "Item already exists." }
-                );
-                return (failedResponse, null);
-            }
-
-            var itemEntity = PropCopier.Copy(
-                item,
-                new ItemEntity { Hash = hash, IsLow = item.Stock <= item.LowThreshold }
-            );
-
-            var result = await _db.Items.AddAsync(itemEntity);
-
-            await _ih.AddItemHistory(
-                PropCopier.Copy(
-                    item,
-                    new AdddItemHistoryModel { ItemId = result.Entity.Id, Hash = hash }
-                ),
-                ActionType.Created
-            );
-
-            await _db.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            _log.LogInformation("Successfully created item {ItemId}. Exiting.", result.Entity.Id);
-
-            var createdResponse = PropCopier.Copy(
-                result.Entity,
-                new ResponseItemModel { ItemHistory = null }
-            );
-
-            return (null, createdResponse);
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            _log.LogError(
-                ex,
-                "Failed to create item {Brand} - {Generic}. Rolling back changes.",
-                item.Brand,
-                item.Generic
-            );
-
-            var failedResponse = PropCopier.Copy(
-                item,
-                new FailedResponseItemModel
-                {
-                    Error = "An unexpected error occurred. Please try again later.",
-                }
-            );
-            _log.LogInformation("Exiting due to exceptions.");
-
-            return (failedResponse, null);
-        }
-    }
-
     //create items
     //manual model validation
     public async Task<(
@@ -122,8 +44,6 @@ public class ItemService(
         {
             foreach (var item in items)
             {
-                using var transaction = await _db.Database.BeginTransactionAsync();
-
                 try
                 {
                     (bool isValid, string? error) = await SuperValidator.Check(
@@ -170,7 +90,6 @@ public class ItemService(
                     );
 
                     await _db.SaveChangesAsync();
-                    await transaction.CommitAsync();
 
                     created.Add(
                         PropCopier.Copy(itemEntity, new ResponseItemModel { ItemHistory = null })
@@ -186,8 +105,6 @@ public class ItemService(
                         item.Brand,
                         item.Generic
                     );
-
-                    await transaction.RollbackAsync();
                 }
             }
 
@@ -205,16 +122,19 @@ public class ItemService(
     public async Task<(List<ResponseItemModel> items, int totalCount)> GetItems(
         int page,
         int limit,
-        bool includeHistory
+        bool includeHistory,
+        bool isDeleted,
+        bool isExpired
     )
     {
         try
         {
             _log.LogDebug("Service called. Getting some items...");
-            var query = _db.Items.Where(i => !i.IsDeleted);
-            if (includeHistory)
-                query = query.Include(i => i.ItemHistory);
+            var query = _db.Items.Where(i => i.IsDeleted == isDeleted && i.IsExpired == isExpired);
+            query = includeHistory ? query.Include(i => i.ItemHistory) : query;
+
             var totalCount = await query.CountAsync();
+
             if (totalCount == 0)
                 return (Array.Empty<ResponseItemModel>().ToList(), 0);
             var items = await query.Skip((page - 1) * limit).Take(limit).ToListAsync();
@@ -713,16 +633,39 @@ public class ItemService(
             {
                 query = query.ToLower();
                 baseQuery = baseQuery.Where(i =>
-                    (i.Barcode ?? "").ToLower().Contains(query)
-                    || (i.Brand ?? "").ToLower().Contains(query)
-                    || (i.Generic ?? "").ToLower().Contains(query)
-                    || (i.Classification ?? "").ToLower().Contains(query)
-                    || (i.Formulation ?? "").ToLower().Contains(query)
-                    || (i.Location ?? "").ToLower().Contains(query)
-                    || (i.Company ?? "").ToLower().Contains(query)
-                    || (i.Wholesale.ToString() ?? "").ToLower().Contains(query)
-                    || (i.Retail.ToString() ?? "").ToLower().Contains(query)
+                    (i.Barcode ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+                    || (i.Brand ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+                    || (i.Generic ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+                    || (i.Classification ?? "").Contains(
+                        query,
+                        StringComparison.CurrentCultureIgnoreCase
+                    )
+                    || (i.Formulation ?? "").Contains(
+                        query,
+                        StringComparison.CurrentCultureIgnoreCase
+                    )
+                    || (i.Location ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+                    || (i.Company ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+                    || (i.Wholesale.ToString() ?? "").Contains(
+                        query,
+                        StringComparison.CurrentCultureIgnoreCase
+                    )
+                    || (i.Retail.ToString() ?? "").Contains(
+                        query,
+                        StringComparison.CurrentCultureIgnoreCase
+                    )
                 );
+                // baseQuery = baseQuery.Where(i =>
+                //     (i.Barcode ?? "").ToLower().Contains(query)
+                //     || (i.Brand ?? "").ToLower().Contains(query)
+                //     || (i.Generic ?? "").ToLower().Contains(query)
+                //     || (i.Classification ?? "").ToLower().Contains(query)
+                //     || (i.Formulation ?? "").ToLower().Contains(query)
+                //     || (i.Location ?? "").ToLower().Contains(query)
+                //     || (i.Company ?? "").ToLower().Contains(query)
+                //     || (i.Wholesale.ToString() ?? "").ToLower().Contains(query)
+                //     || (i.Retail.ToString() ?? "").ToLower().Contains(query)
+                // );
             }
             baseQuery = isExpired ? baseQuery.Where(i => i.IsExpired) : baseQuery;
             baseQuery = isReagent ? baseQuery.Where(i => i.IsExpired) : baseQuery;

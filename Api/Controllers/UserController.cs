@@ -1,5 +1,5 @@
 // using API.Models;
-// using Data.Entities.User;
+// using API.Entities.User;
 // using Microsoft.AspNetCore.Mvc;
 
 // namespace API.Controllers;

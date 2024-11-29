@@ -1,6 +1,6 @@
+using API.Entities.User;
 using API.Interfaces;
 using API.Models;
-using Data.Entities.User;
 using Microsoft.AspNetCore.Identity;
 
 namespace API.Services.User;

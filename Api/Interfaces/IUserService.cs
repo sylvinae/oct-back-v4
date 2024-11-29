@@ -1,5 +1,5 @@
+using API.Entities.User;
 using API.Models;
-using Data.Entities.User;
 
 namespace API.Interfaces;
 

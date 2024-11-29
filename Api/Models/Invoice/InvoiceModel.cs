@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Data.Entities.Invoice;
-using Data.Entities.User;
+using API.Entities.Invoice;
+using API.Entities.User;
 using Newtonsoft.Json;
 
 namespace API.Models.Invoice;

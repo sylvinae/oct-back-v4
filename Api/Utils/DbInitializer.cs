@@ -1,5 +1,5 @@
-using Data.Db;
-using Data.Entities.User;
+using API.Db;
+using API.Entities.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

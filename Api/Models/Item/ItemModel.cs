@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using Data.Item.ItemHistory;
+using API.Item.ItemHistory;
 using Newtonsoft.Json;
 
 namespace API.Models.Item;
