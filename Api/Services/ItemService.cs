@@ -15,23 +15,13 @@ using Microsoft.EntityFrameworkCore;
 namespace API.Services;
 
 public class ItemService(
-    Context db,
-    ILogger<ItemService> log,
-    UserManager<UserEntity> userManager,
-    IItemHistoryService ih,
-    IHttpContextAccessor httpContextAccessor,
-    IValidator<CreateItemModel> createValidator,
-    IValidator<UpdateItemModel> updateValidator
+    Context _db,
+    ILogger<ItemService> _log,
+    IItemHistoryService _ih,
+    IValidator<CreateItemModel> _createValidator,
+    IValidator<UpdateItemModel> _updateValidator
 ) : IItemService
 {
-    private readonly Context _db = db;
-    private readonly ILogger<IItemService> _log = log;
-    private readonly UserManager<UserEntity> _userManager = userManager;
-    private readonly IItemHistoryService _ih = ih;
-    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-    private readonly IValidator<CreateItemModel> _createValidator = createValidator;
-    private readonly IValidator<UpdateItemModel> _updateValidator = updateValidator;
-
     //create items
     //model validation done in endpoint
     public async Task<(FailedResponseItemModel? failed, ResponseItemModel? created)> CreateItem(

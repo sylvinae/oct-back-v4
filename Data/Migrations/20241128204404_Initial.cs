@@ -75,7 +75,7 @@ namespace Data.Migrations
                     IsReagent = table.Column<bool>(type: "INTEGER", nullable: false),
                     UsesLeft = table.Column<int>(type: "INTEGER", nullable: true),
                     UsesMax = table.Column<int>(type: "INTEGER", nullable: true),
-                    Hash = table.Column<string>(type: "TEXT", nullable: true),
+                    Hash = table.Column<string>(type: "TEXT", nullable: false),
                     IsLow = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsExpired = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
@@ -261,7 +261,8 @@ namespace Data.Migrations
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
                     Hash = table.Column<string>(type: "TEXT", nullable: false),
                     IsLow = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsExpired = table.Column<bool>(type: "INTEGER", nullable: false)
+                    IsExpired = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Action = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {

@@ -42,16 +42,16 @@ public class ItemHistoryEntity
     [Required]
     public int LowThreshold { get; set; }
     public string? Company { get; set; }
-    public bool HasExpiry { get; set; } = true;
+    public bool HasExpiry { get; set; }
     public string? Expiry { get; set; }
     public bool IsReagent { get; set; }
     public int? UsesLeft { get; set; }
     public int? UsesMax { get; set; }
-    public bool IsDeleted { get; set; } = false;
+    public bool IsDeleted { get; set; }
 
     [Required]
     public string Hash { get; set; } = null!;
     public bool IsLow { get; set; }
-    public bool IsExpired { get; set; } = false;
+    public bool IsExpired { get; set; }
     public string Action { get; set; } = null!;
 }

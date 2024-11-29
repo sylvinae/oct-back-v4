@@ -36,7 +36,7 @@ public class ItemEntity
 
     public string? Company { get; set; }
 
-    public bool HasExpiry { get; set; } = true;
+    public bool HasExpiry { get; set; }
 
     public string? Expiry { get; set; }
 
@@ -46,12 +46,12 @@ public class ItemEntity
 
     public int? UsesMax { get; set; }
 
-    public string? Hash { get; set; }
+    public string Hash { get; set; } = null!;
 
     public bool IsLow { get; set; }
 
-    public bool IsExpired { get; set; } = false;
-    public bool IsDeleted { get; set; } = false;
+    public bool IsExpired { get; set; }
+    public bool IsDeleted { get; set; }
 
     public ICollection<InvoiceItemEntity> InvoiceItems { get; set; } = [];
     public ICollection<ItemHistoryEntity> ItemHistory { get; set; } = [];

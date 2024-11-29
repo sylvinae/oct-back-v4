@@ -27,9 +27,7 @@ public class Cryptics
             "HasExpiry",
             "Expiry",
             "IsReagent",
-            "UsesLeft",
             "UsesMax",
-            "IsLow",
             "IsExpired",
         };
 

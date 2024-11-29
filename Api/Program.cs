@@ -43,17 +43,6 @@ var app = builder.Build();
 //     app.UseSwaggerUI();
 // }
 
-app.UseStatusCodePages(async context =>
-{
-    if (context.HttpContext.Response.StatusCode == StatusCodes.Status400BadRequest)
-    {
-        // Customize the message for 400 errors
-        context.HttpContext.Response.ContentType = "application/json";
-        await context.HttpContext.Response.WriteAsync(
-            "{\"message\": \"Invalid request. Please check your query parameters or request format.\"}"
-        );
-    }
-});
 
 // Optionally add exception handler middleware for general exception handling
 app.UseExceptionHandler("/error"); // Redirects to a global error handler
