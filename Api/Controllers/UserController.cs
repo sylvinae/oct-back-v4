@@ -1,34 +1,57 @@
-// using API.Models;
-// using API.Entities.User;
-// using Microsoft.AspNetCore.Mvc;
+using API.Interfaces;
+using API.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-// namespace API.Controllers;
+namespace API.Controllers
+{
+    [Route("api/auth")]
+    [ApiController]
+    public class UserController(IUserService userService) : ControllerBase
+    {
+        [HttpPost("register")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
+        {
+            var success = await userService.RegisterUserAsync(model);
+            if (!success)
+            {
+                return BadRequest(new { message = "Registration failed" });
+            }
 
-// [ApiController]
-// [Route("api/auth")]
-// public class UserController(ILogger<UserController> log) : ControllerBase
-// {
-//     [HttpPost("register")]
-//     public async Task<IActionResult> Register([FromBody] RegisterModel model)
-//     {
-//         if (!ModelState.IsValid)
-//             return BadRequest(ModelState);
+            return Ok(new { message = "User registered successfully" });
+        }
 
-//         var user = new UserEntity
-//         {
-//             UserName = model.Email,
-//             Email = model.Email,
-//             FirstName = model.FirstName,
-//             LastName = model.LastName,
-//         };
+        [HttpPost("login")]
+        public async Task<IActionResult> LoginUser([FromBody] LoginUserModel model)
+        {
+            var success = await userService.LoginUserAsync(model);
+            if (!success)
+            {
+                return BadRequest(new { message = "Invalid credentials" });
+            }
 
-//         var result = await _userManager.CreateAsync(user, model.Password);
-//         if (!result.Succeeded)
-//             return BadRequest(result.Errors);
+            return Ok(new { message = "Login successful" });
+        }
 
-//         // Assign role
-//         await _userManager.AddToRoleAsync(user, model.Role);
+        [HttpPost("logout")]
+        public async Task<IActionResult> LogoutUser()
+        {
+            await userService.LogoutUserAsync();
+            return Ok(new { message = "Logged out successfully" });
+        }
 
-//         return Ok(new { Message = "User registered successfully" });
-//     }
-// }
+        [HttpPost("change-role")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleModel model)
+        {
+            var result = await userService.ChangeRoleAsync(model);
+            if (result != null)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(new { message = "Failed to change role" });
+        }
+    }
+}

@@ -52,7 +52,7 @@ public class BaseItemModel
     public bool HasExpiry { get; set; }
 
     [JsonProperty("expiry")]
-    public string? Expiry { get; set; }
+    public DateTime? Expiry { get; set; }
 }
 
 public class CreateItemModel : BaseItemModel { }

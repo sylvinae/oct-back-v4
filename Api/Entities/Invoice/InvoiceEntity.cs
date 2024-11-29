@@ -13,7 +13,7 @@ public class InvoiceEntity
     public Guid UserId { get; set; }
 
     [Required]
-    public string InvoiceDate { get; set; } = null!;
+    public DateTime InvoiceDate { get; set; }
 
     [Required]
     public decimal AmountTendered { get; set; }
@@ -22,6 +22,7 @@ public class InvoiceEntity
     public decimal TotalPrice { get; set; }
     public decimal? TotalDiscountedPrice { get; set; }
     public bool IsVoided { get; set; }
+    public DateTime? VoidTime { get; set; }
     public string? VoidReason { get; set; }
 
     [ForeignKey("UserId")]

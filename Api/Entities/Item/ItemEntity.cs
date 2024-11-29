@@ -38,7 +38,7 @@ public class ItemEntity
 
     public bool HasExpiry { get; set; }
 
-    public string? Expiry { get; set; }
+    public DateTime? Expiry { get; set; }
 
     public bool IsReagent { get; set; }
 

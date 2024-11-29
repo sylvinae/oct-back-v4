@@ -1,27 +1,32 @@
 using System.Reflection;
+using System.Text.Json;
 using API.Db;
-using API.Endpoints;
 using API.Entities.User;
-using API.Interfaces;
-using API.Models.Item;
-using API.Services;
-using API.Services.User;
 using API.Utils;
-using API.Validators;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OData.Edm;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<Context>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
+
+// Add necessary services
 builder.Services.AddLogging();
-
-var servicesAssembly = Assembly.GetExecutingAssembly();
-builder.Services.AddServicesByConvention(servicesAssembly);
-
-builder.Services.AddAuthorization();
-
+builder.Services.AddServicesByConvention(Assembly.GetExecutingAssembly());
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+builder.Services.AddDbContext<Context>();
+builder.Services.AddAuthorizationPolicies();
 
 builder
     .Services.AddIdentity<UserEntity, IdentityRole<Guid>>(options =>
@@ -32,23 +37,23 @@ builder
     .AddEntityFrameworkStores<Context>()
     .AddDefaultTokenProviders();
 
+// Add OData support
+builder
+    .Services.AddControllers()
+    .AddOData(opt => opt.Select().Expand().Filter().OrderBy().Count().SetMaxTop(100))
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 
-// builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<Context>();
-builder.Services.AddAuthorizationPolicies();
 var app = builder.Build();
 
-// Enable Swagger in development
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseSwagger();
-//     app.UseSwaggerUI();
-// }
-
-
+// OData endpoint setup
 app.UseExceptionHandler("/error");
 
+// Initialize Database
 using (var scope = app.Services.CreateScope())
 {
     var serviceProvider = scope.ServiceProvider;
@@ -58,13 +63,7 @@ using (var scope = app.Services.CreateScope())
     await DbInitializer.Initialize(serviceProvider, userManager, roleManager);
 }
 
-// Map endpoints
-app.MapUserEndpoints();
-app.MapItemEndpoints();
-app.MapErrorEndpoints();
-
-// Middleware
-// app.UseHttpsRedirection();
+app.MapControllers();
 app.UseAuthentication();
 app.UseAuthorization();
 

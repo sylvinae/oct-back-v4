@@ -12,7 +12,7 @@ public class BaseInvoiceModel
     public Guid UserId { get; set; }
 
     [JsonProperty("invoiceDate")]
-    public string InvoiceDate { get; set; } = null!;
+    public DateTime InvoiceDate { get; set; }
 
     [JsonProperty("amountTendered")]
     public decimal AmountTendered { get; set; }

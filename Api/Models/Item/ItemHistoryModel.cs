@@ -61,7 +61,7 @@ public class BaseItemHistoryModel
     public bool HasExpiry { get; set; }
 
     [JsonProperty("expiry")]
-    public string? Expiry { get; set; }
+    public DateTime? Expiry { get; set; }
 
     [JsonProperty("isExpired")]
     public bool IsExpired { get; set; }

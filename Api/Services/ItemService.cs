@@ -1,17 +1,11 @@
-using System.Resources;
 using API.Db;
 using API.Entities.Item;
-using API.Entities.User;
 using API.Interfaces;
 using API.Models.Item;
 using API.Utils;
 using API.Validators;
 using FluentValidation;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-
-// using Sprache;
 
 namespace API.Services;
 
@@ -118,97 +112,9 @@ public class ItemService(
         }
     }
 
-    //get items
-    public async Task<(List<ResponseItemModel> items, int totalCount)> GetItems(
-        int page,
-        int limit,
-        bool includeHistory,
-        bool isDeleted,
-        bool isExpired
-    )
+    public IQueryable<ItemEntity> GetAllItems()
     {
-        try
-        {
-            _log.LogDebug("Service called. Getting some items...");
-            var query = _db.Items.Where(i => i.IsDeleted == isDeleted && i.IsExpired == isExpired);
-            query = includeHistory ? query.Include(i => i.ItemHistory) : query;
-
-            var totalCount = await query.CountAsync();
-
-            if (totalCount == 0)
-                return (Array.Empty<ResponseItemModel>().ToList(), 0);
-            var items = await query.Skip((page - 1) * limit).Take(limit).ToListAsync();
-            var response = items
-                .Select(item =>
-                    PropCopier.Copy(
-                        item,
-                        new ResponseItemModel
-                        {
-                            ItemHistory = includeHistory
-                                ? item
-                                    .ItemHistory?.Select(h =>
-                                        PropCopier.Copy(
-                                            h,
-                                            new ResponseItemHistoryModel
-                                            {
-                                                UserId = h.UserId,
-                                                ItemId = h.ItemId,
-                                            }
-                                        )
-                                    )
-                                    .ToList()
-                                : null,
-                        }
-                    )
-                )
-                .ToList();
-            return (response, totalCount);
-        }
-        catch (Exception ex)
-        {
-            _log.LogError(ex, "An error occurred while fetching items.");
-            throw;
-        }
-    }
-
-    public async Task<ResponseItemModel?> GetItem(Guid id, bool includeHistory)
-    {
-        try
-        {
-            _log.LogDebug("Service called. Fetching item with ID {ItemId}...", id);
-            var query = _db.Items.Where(i => !i.IsDeleted && i.Id == id);
-            if (includeHistory)
-                query = query.Include(i => i.ItemHistory);
-            var item = await query.FirstOrDefaultAsync();
-            if (item == null)
-                return null;
-            var response = PropCopier.Copy(
-                item,
-                new ResponseItemModel
-                {
-                    ItemHistory = includeHistory
-                        ? item
-                            .ItemHistory?.Select(h =>
-                                PropCopier.Copy(
-                                    h,
-                                    new ResponseItemHistoryModel
-                                    {
-                                        UserId = h.UserId,
-                                        ItemId = h.ItemId,
-                                    }
-                                )
-                            )
-                            .ToList()
-                        : null,
-                }
-            );
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _log.LogError(ex, "An error occurred while fetching item with ID {ItemId}.", id);
-            throw;
-        }
+        return _db.Items;
     }
 
     public async Task<(
@@ -613,117 +519,117 @@ public class ItemService(
         return null;
     }
 
-    public async Task<(List<ResponseItemModel> items, int count)> SearchItems(
-        string query,
-        int page,
-        int limit,
-        bool isdeleted,
-        bool isExpired,
-        bool isReagent,
-        bool isLow,
-        bool includeHistory,
-        bool? hasExpiry
-    )
-    {
-        try
-        {
-            var baseQuery = _db.Items.Where(i => !i.IsDeleted);
+    // public async Task<(List<ResponseItemModel> items, int count)> SearchItems(
+    //     string query,
+    //     int page,
+    //     int limit,
+    //     bool isdeleted,
+    //     bool isExpired,
+    //     bool isReagent,
+    //     bool isLow,
+    //     bool includeHistory,
+    //     bool? hasExpiry
+    // )
+    // {
+    //     try
+    //     {
+    //         var baseQuery = _db.Items.Where(i => !i.IsDeleted);
 
-            if (!string.IsNullOrWhiteSpace(query))
-            {
-                query = query.ToLower();
-                baseQuery = baseQuery.Where(i =>
-                    (i.Barcode ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-                    || (i.Brand ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-                    || (i.Generic ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-                    || (i.Classification ?? "").Contains(
-                        query,
-                        StringComparison.CurrentCultureIgnoreCase
-                    )
-                    || (i.Formulation ?? "").Contains(
-                        query,
-                        StringComparison.CurrentCultureIgnoreCase
-                    )
-                    || (i.Location ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-                    || (i.Company ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-                    || (i.Wholesale.ToString() ?? "").Contains(
-                        query,
-                        StringComparison.CurrentCultureIgnoreCase
-                    )
-                    || (i.Retail.ToString() ?? "").Contains(
-                        query,
-                        StringComparison.CurrentCultureIgnoreCase
-                    )
-                );
-                // baseQuery = baseQuery.Where(i =>
-                //     (i.Barcode ?? "").ToLower().Contains(query)
-                //     || (i.Brand ?? "").ToLower().Contains(query)
-                //     || (i.Generic ?? "").ToLower().Contains(query)
-                //     || (i.Classification ?? "").ToLower().Contains(query)
-                //     || (i.Formulation ?? "").ToLower().Contains(query)
-                //     || (i.Location ?? "").ToLower().Contains(query)
-                //     || (i.Company ?? "").ToLower().Contains(query)
-                //     || (i.Wholesale.ToString() ?? "").ToLower().Contains(query)
-                //     || (i.Retail.ToString() ?? "").ToLower().Contains(query)
-                // );
-            }
-            baseQuery = isExpired ? baseQuery.Where(i => i.IsExpired) : baseQuery;
-            baseQuery = isReagent ? baseQuery.Where(i => i.IsExpired) : baseQuery;
-            baseQuery = isLow ? baseQuery.Where(i => i.IsExpired) : baseQuery;
-            baseQuery = includeHistory ? baseQuery.Include(i => i.ItemHistory) : baseQuery;
+    //         if (!string.IsNullOrWhiteSpace(query))
+    //         {
+    //             query = query.ToLower();
+    //             baseQuery = baseQuery.Where(i =>
+    //                 (i.Barcode ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+    //                 || (i.Brand ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+    //                 || (i.Generic ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+    //                 || (i.Classification ?? "").Contains(
+    //                     query,
+    //                     StringComparison.CurrentCultureIgnoreCase
+    //                 )
+    //                 || (i.Formulation ?? "").Contains(
+    //                     query,
+    //                     StringComparison.CurrentCultureIgnoreCase
+    //                 )
+    //                 || (i.Location ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+    //                 || (i.Company ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
+    //                 || (i.Wholesale.ToString() ?? "").Contains(
+    //                     query,
+    //                     StringComparison.CurrentCultureIgnoreCase
+    //                 )
+    //                 || (i.Retail.ToString() ?? "").Contains(
+    //                     query,
+    //                     StringComparison.CurrentCultureIgnoreCase
+    //                 )
+    //             );
+    //             // baseQuery = baseQuery.Where(i =>
+    //             //     (i.Barcode ?? "").ToLower().Contains(query)
+    //             //     || (i.Brand ?? "").ToLower().Contains(query)
+    //             //     || (i.Generic ?? "").ToLower().Contains(query)
+    //             //     || (i.Classification ?? "").ToLower().Contains(query)
+    //             //     || (i.Formulation ?? "").ToLower().Contains(query)
+    //             //     || (i.Location ?? "").ToLower().Contains(query)
+    //             //     || (i.Company ?? "").ToLower().Contains(query)
+    //             //     || (i.Wholesale.ToString() ?? "").ToLower().Contains(query)
+    //             //     || (i.Retail.ToString() ?? "").ToLower().Contains(query)
+    //             // );
+    //         }
+    //         baseQuery = isExpired ? baseQuery.Where(i => i.IsExpired) : baseQuery;
+    //         baseQuery = isReagent ? baseQuery.Where(i => i.IsExpired) : baseQuery;
+    //         baseQuery = isLow ? baseQuery.Where(i => i.IsExpired) : baseQuery;
+    //         baseQuery = includeHistory ? baseQuery.Include(i => i.ItemHistory) : baseQuery;
 
-            baseQuery = hasExpiry.HasValue
-                ? baseQuery.Where(i => i.IsExpired == hasExpiry.Value)
-                : baseQuery;
+    //         baseQuery = hasExpiry.HasValue
+    //             ? baseQuery.Where(i => i.IsExpired == hasExpiry.Value)
+    //             : baseQuery;
 
-            var totalCount = await baseQuery.CountAsync();
+    //         var totalCount = await baseQuery.CountAsync();
 
-            var items = await baseQuery
-                .OrderBy(i => i.Id)
-                .Skip((page - 1) * limit)
-                .Take(limit)
-                .ToListAsync();
+    //         var items = await baseQuery
+    //             .OrderBy(i => i.Id)
+    //             .Skip((page - 1) * limit)
+    //             .Take(limit)
+    //             .ToListAsync();
 
-            var response = items
-                .Select(item =>
-                    PropCopier.Copy(
-                        item,
-                        new ResponseItemModel
-                        {
-                            Id = item.Id,
-                            ItemHistory = includeHistory
-                                ? item
-                                    .ItemHistory?.Select(h =>
-                                        PropCopier.Copy(
-                                            h,
-                                            new ResponseItemHistoryModel
-                                            {
-                                                Id = h.Id,
-                                                UserId = h.UserId,
-                                                ItemId = h.ItemId,
-                                            }
-                                        )
-                                    )
-                                    .ToList()
-                                : null,
-                        }
-                    )
-                )
-                .ToList();
+    //         var response = items
+    //             .Select(item =>
+    //                 PropCopier.Copy(
+    //                     item,
+    //                     new ResponseItemModel
+    //                     {
+    //                         Id = item.Id,
+    //                         ItemHistory = includeHistory
+    //                             ? item
+    //                                 .ItemHistory?.Select(h =>
+    //                                     PropCopier.Copy(
+    //                                         h,
+    //                                         new ResponseItemHistoryModel
+    //                                         {
+    //                                             Id = h.Id,
+    //                                             UserId = h.UserId,
+    //                                             ItemId = h.ItemId,
+    //                                         }
+    //                                     )
+    //                                 )
+    //                                 .ToList()
+    //                             : null,
+    //                     }
+    //                 )
+    //             )
+    //             .ToList();
 
-            return (response, totalCount);
-        }
-        catch (Exception ex)
-        {
-            _log.LogError(
-                ex,
-                "An error occurred while searching items. Query: {Query}, Page: {Page}, Limit: {Limit}, IncludeHistory: {IncludeHistory}",
-                query,
-                page,
-                limit,
-                includeHistory
-            );
-            throw;
-        }
-    }
+    //         return (response, totalCount);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _log.LogError(
+    //             ex,
+    //             "An error occurred while searching items. Query: {Query}, Page: {Page}, Limit: {Limit}, IncludeHistory: {IncludeHistory}",
+    //             query,
+    //             page,
+    //             limit,
+    //             includeHistory
+    //         );
+    //         throw;
+    //     }
+    // }
 }

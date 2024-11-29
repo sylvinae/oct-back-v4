@@ -20,7 +20,7 @@ namespace API.Entities.Expense
         public decimal TotalCost { get; set; }
 
         [Required]
-        public string ExpenseDate { get; set; } = null!;
+        public DateTime ExpenseDate { get; set; }
         public ICollection<ExpenseItemEntity>? ExpenseItems { get; set; } = [];
     }
 }

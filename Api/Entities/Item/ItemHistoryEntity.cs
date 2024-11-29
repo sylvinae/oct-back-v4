@@ -43,7 +43,7 @@ public class ItemHistoryEntity
     public int LowThreshold { get; set; }
     public string? Company { get; set; }
     public bool HasExpiry { get; set; }
-    public string? Expiry { get; set; }
+    public DateTime? Expiry { get; set; }
     public bool IsReagent { get; set; }
     public int? UsesLeft { get; set; }
     public int? UsesMax { get; set; }
