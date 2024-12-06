@@ -29,7 +29,7 @@ namespace API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("ExpenseDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal>("TotalCost")
                         .HasColumnType("numeric");
@@ -77,7 +77,7 @@ namespace API.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<DateTime>("InvoiceDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsVoided")
                         .HasColumnType("boolean");
@@ -95,7 +95,7 @@ namespace API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("VoidTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -161,7 +161,7 @@ namespace API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("Expiry")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Formulation")
                         .HasColumnType("text");
@@ -318,7 +318,7 @@ namespace API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("Expiry")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Formulation")
                         .HasColumnType("text");

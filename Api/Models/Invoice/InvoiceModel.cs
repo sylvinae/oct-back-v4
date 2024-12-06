@@ -12,6 +12,7 @@ public class BaseInvoiceModel
     public Guid UserId { get; set; }
 
     [JsonProperty("invoiceDate")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime InvoiceDate { get; set; }
 
     [JsonProperty("amountTendered")]

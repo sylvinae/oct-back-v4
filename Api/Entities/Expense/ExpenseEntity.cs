@@ -20,6 +20,7 @@ namespace API.Entities.Expense
         public decimal TotalCost { get; set; }
 
         [Required]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime ExpenseDate { get; set; }
         public ICollection<ExpenseItemEntity>? ExpenseItems { get; set; } = [];
     }

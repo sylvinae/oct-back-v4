@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20241129180957_Initial")]
-    partial class Initial
+    [Migration("20241206170946_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,7 +32,7 @@ namespace API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("ExpenseDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal>("TotalCost")
                         .HasColumnType("numeric");
@@ -80,7 +80,7 @@ namespace API.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<DateTime>("InvoiceDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsVoided")
                         .HasColumnType("boolean");
@@ -98,7 +98,7 @@ namespace API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("VoidTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -164,7 +164,7 @@ namespace API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("Expiry")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Formulation")
                         .HasColumnType("text");
@@ -321,7 +321,7 @@ namespace API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("Expiry")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Formulation")
                         .HasColumnType("text");

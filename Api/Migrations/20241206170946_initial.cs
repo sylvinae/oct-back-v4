@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -72,7 +72,7 @@ namespace API.Migrations
                     LowThreshold = table.Column<int>(type: "integer", nullable: false),
                     Company = table.Column<string>(type: "text", nullable: true),
                     HasExpiry = table.Column<bool>(type: "boolean", nullable: false),
-                    Expiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Expiry = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     IsReagent = table.Column<bool>(type: "boolean", nullable: false),
                     UsesLeft = table.Column<int>(type: "integer", nullable: true),
                     UsesMax = table.Column<int>(type: "integer", nullable: true),
@@ -199,7 +199,7 @@ namespace API.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     TotalCost = table.Column<decimal>(type: "numeric", nullable: false),
-                    ExpenseDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    ExpenseDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -218,12 +218,12 @@ namespace API.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    InvoiceDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    InvoiceDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     AmountTendered = table.Column<decimal>(type: "numeric", nullable: false),
                     TotalPrice = table.Column<decimal>(type: "numeric", nullable: false),
                     TotalDiscountedPrice = table.Column<decimal>(type: "numeric", nullable: true),
                     IsVoided = table.Column<bool>(type: "boolean", nullable: false),
-                    VoidTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    VoidTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     VoidReason = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -256,7 +256,7 @@ namespace API.Migrations
                     LowThreshold = table.Column<int>(type: "integer", nullable: false),
                     Company = table.Column<string>(type: "text", nullable: true),
                     HasExpiry = table.Column<bool>(type: "boolean", nullable: false),
-                    Expiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Expiry = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     IsReagent = table.Column<bool>(type: "boolean", nullable: false),
                     UsesLeft = table.Column<int>(type: "integer", nullable: true),
                     UsesMax = table.Column<int>(type: "integer", nullable: true),

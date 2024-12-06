@@ -43,6 +43,8 @@ public class ItemHistoryEntity
     public int LowThreshold { get; set; }
     public string? Company { get; set; }
     public bool HasExpiry { get; set; }
+
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? Expiry { get; set; }
     public bool IsReagent { get; set; }
     public int? UsesLeft { get; set; }

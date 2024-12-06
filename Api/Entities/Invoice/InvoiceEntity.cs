@@ -13,6 +13,7 @@ public class InvoiceEntity
     public Guid UserId { get; set; }
 
     [Required]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime InvoiceDate { get; set; }
 
     [Required]
@@ -22,6 +23,8 @@ public class InvoiceEntity
     public decimal TotalPrice { get; set; }
     public decimal? TotalDiscountedPrice { get; set; }
     public bool IsVoided { get; set; }
+
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? VoidTime { get; set; }
     public string? VoidReason { get; set; }
 

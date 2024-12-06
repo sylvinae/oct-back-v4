@@ -64,7 +64,12 @@ public class ItemService(
                             item.Brand,
                             item.Generic
                         );
-                        failed.Add(PropCopier.Copy(existingItem, new FailedResponseItemModel()));
+                        failed.Add(
+                            PropCopier.Copy(
+                                existingItem,
+                                new FailedResponseItemModel { Error = "Item already exists." }
+                            )
+                        );
                         continue;
                     }
 
@@ -98,6 +103,9 @@ public class ItemService(
                         "An error occurred while creating item {Brand} - {Generic}.",
                         item.Brand,
                         item.Generic
+                    );
+                    failed.Add(
+                        PropCopier.Copy(item, new FailedResponseItemModel { Error = ex.Message })
                     );
                 }
             }

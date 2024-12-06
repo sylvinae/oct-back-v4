@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using API.Entities.Invoice;
 using API.Item.ItemHistory;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,7 @@ public class ItemEntity
 
     public bool HasExpiry { get; set; }
 
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? Expiry { get; set; }
 
     public bool IsReagent { get; set; }

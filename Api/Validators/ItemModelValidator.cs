@@ -36,7 +36,7 @@ public class BaseItemModelValidator<T> : AbstractValidator<T>
             .WithMessage("UsesLeft must be null when isReagent is false.");
 
         RuleFor(x => x.Expiry)
-            .Must((model, expiry) => !expiry.HasValue || !model.HasExpiry)
+            .Must((model, expiry) => expiry.HasValue || !model.HasExpiry)
             .When(x => x.HasExpiry)
             .WithMessage("Expiry is required when hasExpiry is true.");
 
@@ -50,7 +50,8 @@ public class BaseItemModelValidator<T> : AbstractValidator<T>
     {
         if (expiry.HasValue)
         {
-            return expiry.Value >= DateTime.UtcNow.Date;
+            var expiryDate = expiry.Value.Date;
+            return expiryDate >= DateTime.UtcNow.Date;
         }
         return false;
     }
