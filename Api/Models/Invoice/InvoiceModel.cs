@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using API.Entities.Invoice;
-using API.Entities.User;
 using Newtonsoft.Json;
 
 namespace API.Models.Invoice;
@@ -37,11 +35,23 @@ public class ResponseInvoiceModel : BaseInvoiceModel
     public Guid Id { get; set; }
 
     [JsonProperty("invoiceItems")]
-    public ICollection<InvoiceItemEntity> InvoiceItems { get; set; } = [];
+    public ICollection<InvoiceItemModel>? InvoiceItems { get; set; } = [];
 }
 
-public class CreateInvoiceModel : BaseInvoiceItemModel
+public class CreateInvoiceModel : BaseInvoiceModel
 {
     [JsonProperty("invoiceItems")]
-    public ICollection<InvoiceItemEntity>? InvoiceItems { get; set; } = [];
+    public ICollection<InvoiceItemModel> InvoiceItems { get; set; } = [];
+}
+
+public class VoidInvoiceModel
+{
+    [JsonProperty("invoiceId")]
+    [Required]
+    public Guid InvoiceId { get; set; }
+
+    [JsonProperty("voidReason")]
+    [Required]
+    [MaxLength(500)]
+    public string VoidReason { get; set; } = string.Empty;
 }

@@ -10,11 +10,9 @@ using Npgsql;
 
 namespace API.Db;
 
-public class Context : IdentityDbContext<UserEntity, IdentityRole<Guid>, Guid>
+public class Context(DbContextOptions<Context> options)
+    : IdentityDbContext<UserEntity, IdentityRole<Guid>, Guid>(options)
 {
-    public Context(DbContextOptions<Context> options)
-        : base(options) { }
-
     // DbSets for your entities
     public DbSet<InvoiceEntity> Invoices { get; set; } = null!;
     public DbSet<InvoiceItemEntity> InvoiceItems { get; set; } = null!;

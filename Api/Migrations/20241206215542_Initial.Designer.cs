@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20241206170946_initial")]
-    partial class initial
+    [Migration("20241206215542_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -121,10 +121,6 @@ namespace API.Migrations
 
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("ItemName")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<decimal>("ItemPrice")
                         .HasPrecision(18, 2)

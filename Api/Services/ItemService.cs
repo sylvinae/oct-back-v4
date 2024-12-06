@@ -168,6 +168,7 @@ public class ItemService(
                             new FailedResponseItemModel
                             {
                                 Error = $"Item with ID {item.Id} not found.",
+                                ItemHistory = null,
                             }
                         )
                     );
@@ -184,6 +185,7 @@ public class ItemService(
                             new FailedResponseItemModel
                             {
                                 Error = $"Item with ID {item.Id} has no changes.Skipped.",
+                                ItemHistory = null,
                             }
                         )
                     );

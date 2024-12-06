@@ -119,10 +119,6 @@ namespace API.Migrations
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("ItemName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<decimal>("ItemPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");

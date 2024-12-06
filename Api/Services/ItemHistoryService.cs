@@ -11,17 +11,12 @@ using SQLitePCL;
 namespace API.Services;
 
 public class ItemHistoryService(
-    Context db,
-    ILogger<ItemHistoryService> log,
-    UserManager<UserEntity> userManager,
-    IHttpContextAccessor httpContextAccessor
+    Context _db,
+    ILogger<ItemHistoryService> _log,
+    UserManager<UserEntity> _userManager,
+    IHttpContextAccessor _httpContextAccessor
 ) : IItemHistoryService
 {
-    private readonly Context _db = db;
-    private readonly ILogger<ItemHistoryService> _log = log;
-    private readonly UserManager<UserEntity> _userManager = userManager;
-    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-
     public async Task<bool> AddItemHistory(AdddItemHistoryModel itemHistory, ActionType action)
     {
         try

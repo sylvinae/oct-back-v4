@@ -3,55 +3,54 @@ using API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[Route("api/auth")]
+[ApiController]
+public class UserController(IUserService userService) : ControllerBase
 {
-    [Route("api/auth")]
-    [ApiController]
-    public class UserController(IUserService userService) : ControllerBase
+    [HttpPost("register")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
     {
-        [HttpPost("register")]
-        [Authorize(Roles = "admin")]
-        public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
+        var success = await userService.RegisterUserAsync(model);
+        if (!success)
         {
-            var success = await userService.RegisterUserAsync(model);
-            if (!success)
-            {
-                return BadRequest(new { message = "Registration failed" });
-            }
-
-            return Ok(new { message = "User registered successfully" });
+            return BadRequest(new { message = "Registration failed" });
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> LoginUser([FromBody] LoginUserModel model)
-        {
-            var success = await userService.LoginUserAsync(model);
-            if (!success)
-            {
-                return BadRequest(new { message = "Invalid credentials" });
-            }
+        return Ok(new { message = "User registered successfully" });
+    }
 
-            return Ok(new { message = "Login successful" });
+    [HttpPost("login")]
+    public async Task<IActionResult> LoginUser([FromBody] LoginUserModel model)
+    {
+        var success = await userService.LoginUserAsync(model);
+        if (!success)
+        {
+            return BadRequest(new { message = "Invalid credentials" });
         }
 
-        [HttpPost("logout")]
-        public async Task<IActionResult> LogoutUser()
+        return Ok(new { message = "Login successful" });
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> LogoutUser()
+    {
+        await userService.LogoutUserAsync();
+        return Ok(new { message = "Logged out successfully" });
+    }
+
+    [HttpPost("change-role")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleModel model)
+    {
+        var result = await userService.ChangeRoleAsync(model);
+        if (result != null)
         {
-            await userService.LogoutUserAsync();
-            return Ok(new { message = "Logged out successfully" });
+            return Ok(result);
         }
 
-        [HttpPost("change-role")]
-        [Authorize(Roles = "admin")]
-        public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleModel model)
-        {
-            var result = await userService.ChangeRoleAsync(model);
-            if (result != null)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(new { message = "Failed to change role" });
-        }
+        return BadRequest(new { message = "Failed to change role" });
     }
 }

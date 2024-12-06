@@ -23,7 +23,6 @@ public class InvoiceItemEntity
     public ItemEntity Item { get; set; } = null!;
 
     // Item details at purchase
-    public required string ItemName { get; set; }
     public int? ItemQuantity { get; set; }
     public int? UsesConsumed { get; set; }
 

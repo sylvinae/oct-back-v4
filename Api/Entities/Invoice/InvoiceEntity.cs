@@ -31,5 +31,5 @@ public class InvoiceEntity
     [ForeignKey("UserId")]
     public UserEntity User { get; set; } = null!;
 
-    public ICollection<InvoiceItemEntity>? InvoiceItems = [];
+    public ICollection<InvoiceItemEntity> InvoiceItems = [];
 }

@@ -10,26 +10,18 @@ public static class DbInitializer
 {
     private static readonly string[] Roles = ["admin", "manager", "cashier"];
 
-    /// <summary>
-    /// Initializes the database, applies migrations, and seeds roles and admin user.
-    /// </summary>
     public static async Task Initialize(
         IServiceProvider serviceProvider,
         UserManager<UserEntity> userManager,
         RoleManager<IdentityRole<Guid>> roleManager
     )
     {
-        // Apply migrations automatically
         var dbContext = serviceProvider.GetRequiredService<Context>();
         await dbContext.Database.MigrateAsync();
 
-        // Seed roles and admin user
         await SeedRolesAndAdminUserAsync(roleManager, userManager);
     }
 
-    /// <summary>
-    /// Adds authorization policies for predefined roles.
-    /// </summary>
     public static void AddAuthorizationPolicies(this IServiceCollection services)
     {
         services.AddAuthorization(options =>
@@ -41,15 +33,11 @@ public static class DbInitializer
         });
     }
 
-    /// <summary>
-    /// Seeds predefined roles and admin user into the database.
-    /// </summary>
     private static async Task SeedRolesAndAdminUserAsync(
         RoleManager<IdentityRole<Guid>> roleManager,
         UserManager<UserEntity> userManager
     )
     {
-        // Seed roles
         foreach (var role in Roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -58,7 +46,6 @@ public static class DbInitializer
             }
         }
 
-        // Seed admin user
         var adminEmail = "admin@oct.com";
         var adminPassword = "Password!1";
 
@@ -69,8 +56,8 @@ public static class DbInitializer
             {
                 UserName = adminEmail,
                 Email = adminEmail,
-                FirstName = "Admin", // Provide default FirstName
-                LastName = "Admin", // Provide default LastName
+                FirstName = "Admin",
+                LastName = "Admin",
                 IsDeleted = false,
             };
 

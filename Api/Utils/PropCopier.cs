@@ -47,18 +47,15 @@ namespace API.Utils
                 BindingFlags.Public | BindingFlags.Instance
             );
 
-            // Create a dictionary for fast lookup of target properties by name
             var targetPropertiesDictionary = targetProperties.ToDictionary(p => p.Name);
 
             foreach (var originProp in originProperties)
             {
-                // Find the target property with the same name
                 if (
                     targetPropertiesDictionary.TryGetValue(originProp.Name, out var targetProp)
                     && targetProp.CanWrite
                 )
                 {
-                    // Check if types match or if one is a nullable version of the other
                     if (
                         targetProp.PropertyType == originProp.PropertyType
                         || (
@@ -69,7 +66,6 @@ namespace API.Utils
                     {
                         var value = originProp.GetValue(origin);
 
-                        // Handle value types like Guid and check for default values
                         if (value != null && IsDefaultValue(value, targetProp.PropertyType))
                         {
                             continue;
@@ -83,22 +79,19 @@ namespace API.Utils
             return target;
         }
 
-        // Check if the value is the default value for its type (null for reference types, or the default for value types)
         private static bool IsDefaultValue(object value, Type type)
         {
-            // For reference types, check if the value is null
             if (value == null)
             {
                 return true;
             }
 
-            // For value types, check if it is the default (e.g., Guid.Empty for Guid)
             if (type.IsValueType)
             {
-                return value.Equals(Activator.CreateInstance(type)); // Default value for that type
+                return value.Equals(Activator.CreateInstance(type));
             }
 
-            return false; // Not a default value
+            return false;
         }
     }
 }
