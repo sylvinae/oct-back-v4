@@ -26,9 +26,15 @@ public class InvoiceService(
     {
         var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext?.User!);
 
+        if (user == null)
+            return null;
+
         _log.LogInformation("Create Invoice called.");
-        var newInvoice = PropCopier.Copy(invoice, new InvoiceEntity());
-        // var responseInvoiceItems = new List<InvoiceItemModel>();
+        var newInvoice = PropCopier.Copy(
+            invoice,
+            new InvoiceEntity { UserId = user.Id, IsVoided = false }
+        );
+
         var responseInvoice = PropCopier.Copy(
             invoice,
             new ResponseInvoiceModel { InvoiceItems = null }

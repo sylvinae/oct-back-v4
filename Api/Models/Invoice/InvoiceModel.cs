@@ -7,7 +7,7 @@ namespace API.Models.Invoice;
 public class BaseInvoiceModel
 {
     [JsonProperty("userId")]
-    public Guid UserId { get; set; }
+    public Guid? UserId { get; set; }
 
     [JsonProperty("invoiceDate")]
     [Column(TypeName = "timestamp without time zone")]
@@ -23,7 +23,7 @@ public class BaseInvoiceModel
     public decimal? TotalDiscountedPrice { get; set; }
 
     [JsonProperty("isVoided")]
-    public bool IsVoided { get; set; } = false;
+    public bool? IsVoided { get; set; }
 
     [JsonProperty("voidReason")]
     public string? VoidReason { get; set; }
