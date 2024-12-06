@@ -1,20 +1,16 @@
+using API.Entities.User;
 using API.Interfaces;
 using API.Models;
-using Data.Entities.User;
 using Microsoft.AspNetCore.Identity;
 
 namespace API.Services.User;
 
 public class UserService(
-    UserManager<UserEntity> userManager,
-    RoleManager<IdentityRole<Guid>> roleManager,
-    SignInManager<UserEntity> signInManager
+    UserManager<UserEntity> _userManager,
+    RoleManager<IdentityRole<Guid>> _roleManager,
+    SignInManager<UserEntity> _signInManager
 ) : IUserService
 {
-    private readonly UserManager<UserEntity> _userManager = userManager;
-    private readonly RoleManager<IdentityRole<Guid>> _roleManager = roleManager;
-    private readonly SignInManager<UserEntity> _signInManager = signInManager;
-
     public async Task<bool> RegisterUserAsync(RegisterModel model)
     {
         var user = new UserEntity

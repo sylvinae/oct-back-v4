@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
-using Data.Entities.Invoice;
-using Data.Item.ItemHistory;
+using System.ComponentModel.DataAnnotations.Schema;
+using API.Entities.Invoice;
+using API.Item.ItemHistory;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
-namespace Data.Entities.Item;
+namespace API.Entities.Item;
 
 public class ItemEntity
 {
@@ -38,7 +39,8 @@ public class ItemEntity
 
     public bool HasExpiry { get; set; }
 
-    public string? Expiry { get; set; }
+    [Column(TypeName = "timestamp without time zone")]
+    public DateTime? Expiry { get; set; }
 
     public bool IsReagent { get; set; }
 

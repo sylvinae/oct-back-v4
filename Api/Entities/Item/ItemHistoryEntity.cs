@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Data.Entities.Item;
-using Data.Entities.User;
+using API.Entities.Item;
+using API.Entities.User;
 using Microsoft.EntityFrameworkCore;
 
-namespace Data.Item.ItemHistory;
+namespace API.Item.ItemHistory;
 
 public class ItemHistoryEntity
 {
@@ -43,7 +43,9 @@ public class ItemHistoryEntity
     public int LowThreshold { get; set; }
     public string? Company { get; set; }
     public bool HasExpiry { get; set; }
-    public string? Expiry { get; set; }
+
+    [Column(TypeName = "timestamp without time zone")]
+    public DateTime? Expiry { get; set; }
     public bool IsReagent { get; set; }
     public int? UsesLeft { get; set; }
     public int? UsesMax { get; set; }

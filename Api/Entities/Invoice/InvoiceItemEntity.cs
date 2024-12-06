@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Data.Entities.Item;
+using API.Entities.Item;
 using Microsoft.EntityFrameworkCore;
 
-namespace Data.Entities.Invoice;
+namespace API.Entities.Invoice;
 
 public class InvoiceItemEntity
 {
@@ -23,7 +23,6 @@ public class InvoiceItemEntity
     public ItemEntity Item { get; set; } = null!;
 
     // Item details at purchase
-    public required string ItemName { get; set; }
     public int? ItemQuantity { get; set; }
     public int? UsesConsumed { get; set; }
 

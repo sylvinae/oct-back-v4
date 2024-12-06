@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using Data.Item.ItemHistory;
+using API.Item.ItemHistory;
 using Newtonsoft.Json;
 
 namespace API.Models.Item;
@@ -52,7 +52,7 @@ public class BaseItemModel
     public bool HasExpiry { get; set; }
 
     [JsonProperty("expiry")]
-    public string? Expiry { get; set; }
+    public DateTime? Expiry { get; set; }
 }
 
 public class CreateItemModel : BaseItemModel { }

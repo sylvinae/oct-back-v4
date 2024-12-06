@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
-using Data.Entities.Expense;
-using Data.Entities.Invoice;
-using Data.Item.ItemHistory;
+using API.Entities.Expense;
+using API.Entities.Invoice;
+using API.Item.ItemHistory;
 using Microsoft.AspNetCore.Identity;
 
-namespace Data.Entities.User;
+namespace API.Entities.User;
 
 public class UserEntity : IdentityUser<Guid>
 {

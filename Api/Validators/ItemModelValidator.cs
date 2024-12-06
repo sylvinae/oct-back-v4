@@ -36,45 +36,22 @@ public class BaseItemModelValidator<T> : AbstractValidator<T>
             .WithMessage("UsesLeft must be null when isReagent is false.");
 
         RuleFor(x => x.Expiry)
-            .Must((model, expiry) => !string.IsNullOrEmpty(expiry) || !model.HasExpiry)
+            .Must((model, expiry) => expiry.HasValue || !model.HasExpiry)
             .When(x => x.HasExpiry)
             .WithMessage("Expiry is required when hasExpiry is true.");
 
         RuleFor(x => x.Expiry)
-            .Must(BeValidDateFormat)
-            .When(x => x.HasExpiry && !string.IsNullOrEmpty(x.Expiry))
-            .WithMessage("Expiry must be a valid date in the format yyyy-MM-dd.");
-
-        RuleFor(x => x.Expiry)
             .Must(BeTodayOrFutureDate)
-            .When(x => x.HasExpiry && !string.IsNullOrEmpty(x.Expiry))
+            .When(x => x.HasExpiry && x.Expiry.HasValue)
             .WithMessage("Expiry must not be a past date.");
     }
 
-    private bool BeValidDateFormat(string? expiry)
+    private bool BeTodayOrFutureDate(DateTime? expiry)
     {
-        return DateTime.TryParseExact(
-            expiry,
-            "yyyy-MM-dd",
-            null,
-            System.Globalization.DateTimeStyles.None,
-            out _
-        );
-    }
-
-    private bool BeTodayOrFutureDate(string? expiry)
-    {
-        if (
-            DateTime.TryParseExact(
-                expiry,
-                "yyyy-MM-dd",
-                null,
-                System.Globalization.DateTimeStyles.None,
-                out var parsedDate
-            )
-        )
+        if (expiry.HasValue)
         {
-            return parsedDate >= DateTime.UtcNow.Date;
+            var expiryDate = expiry.Value.Date;
+            return expiryDate >= DateTime.UtcNow.Date;
         }
         return false;
     }
