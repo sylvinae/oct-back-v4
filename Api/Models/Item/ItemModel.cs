@@ -44,8 +44,6 @@ public class CreateItemModel : BaseItemModel
 public class UpdateItemModel : BaseItemModel
 {
     [JsonProperty("id")] public Guid Id { get; set; }
-
-    [JsonProperty("hash")] public string Hash { get; set; } = null!;
 }
 
 public class ResponseItemModel : BaseItemModel

@@ -31,7 +31,6 @@ public class BaseInvoiceModelValidator : AbstractValidator<BaseInvoiceModel>
 
     private static bool BeTodayOrFutureDate(DateTime? invoice)
     {
-        // Ensure the invoice date is not null and is in the future or today
         if (!invoice.HasValue) return false;
         var invoiceDate = invoice.Value.Date;
         return invoiceDate >= DateTime.UtcNow.Date;

@@ -55,6 +55,6 @@ public class UpdateItemModelValidator : BaseItemModelValidator<UpdateItemModel>
     public UpdateItemModelValidator()
     {
         RuleFor(x => x.Id).NotEmpty().WithMessage("ID is required.");
-        RuleFor(x => x.Hash).NotEmpty().WithMessage("Hash is required.");
+      
     }
 }

@@ -59,14 +59,10 @@ public class UpdateItemService(
     {
         var (isValid, error) = await SuperValidator.Check(updateValidator, item);
 
-        if (!isValid && error != null)
-        {
-            log.LogWarning("Model state invalid. {x}", error);
-            failed.Add(PropCopier.Copy(item, new FailedResponseItemModel { Error = error }));
-            return false;
-        }
-
-        return true;
+        if (isValid || error == null) return true;
+        log.LogWarning("Model state invalid. {x}", error);
+        failed.Add(PropCopier.Copy(item, new FailedResponseItemModel { Error = error }));
+        return false;
     }
 
     private async Task<bool> ProcessUpdate(
@@ -93,7 +89,7 @@ public class UpdateItemService(
         {
             log.LogInformation("Updating item with ID {ItemId}.", existingItem.Id);
 
-            item.Hash = newHash;
+            existingItem.Hash = newHash;
             db.Entry(existingItem).CurrentValues.SetValues(item);
 
             updated.Add(PropCopier.Copy(existingItem, new ResponseItemModel()));

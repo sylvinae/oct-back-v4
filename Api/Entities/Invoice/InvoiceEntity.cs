@@ -6,7 +6,7 @@ namespace API.Entities.Invoice;
 
 public class InvoiceEntity
 {
-    public ICollection<InvoiceItemEntity> InvoiceItems = [];
+    public ICollection<InvoiceItemEntity> InvoiceItems { get; set; } = [];
 
     [Key] public Guid Id { get; set; } = Guid.NewGuid();
 
