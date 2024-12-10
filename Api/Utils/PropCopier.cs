@@ -1,65 +1,43 @@
-using System;
-using System.Linq;
 using System.Reflection;
 
-namespace API.Utils
+namespace API.Utils;
+
+public class PropCopier
 {
-    public class PropCopier
+    public static TTarget Copy<TOrigin, TTarget>(TOrigin origin, TTarget target)
     {
-        public static TTarget Copy<TOrigin, TTarget>(TOrigin origin, TTarget target)
-        {
-            var originProperties = typeof(TOrigin).GetProperties(
-                BindingFlags.Public | BindingFlags.Instance
-            );
-            var targetProperties = typeof(TTarget).GetProperties(
-                BindingFlags.Public | BindingFlags.Instance
-            );
+        var originProperties = typeof(TOrigin).GetProperties(
+            BindingFlags.Public | BindingFlags.Instance
+        );
+        var targetProperties = typeof(TTarget).GetProperties(
+            BindingFlags.Public | BindingFlags.Instance
+        );
 
-            var targetPropertiesDictionary = targetProperties.ToDictionary(p => p.Name);
+        var targetPropertiesDictionary = targetProperties.ToDictionary(p => p.Name);
 
-            foreach (var originProp in originProperties)
-            {
+        foreach (var originProp in originProperties)
+            if (
+                targetPropertiesDictionary.TryGetValue(originProp.Name, out var targetProp)
+                && targetProp.CanWrite
+            )
                 if (
-                    targetPropertiesDictionary.TryGetValue(originProp.Name, out var targetProp)
-                    && targetProp.CanWrite
+                    targetProp.PropertyType == originProp.PropertyType
+                    || Nullable.GetUnderlyingType(targetProp.PropertyType)
+                    == originProp.PropertyType
                 )
                 {
-                    if (
-                        targetProp.PropertyType == originProp.PropertyType
-                        || (
-                            Nullable.GetUnderlyingType(targetProp.PropertyType)
-                            == originProp.PropertyType
-                        )
-                    )
-                    {
-                        var value = originProp.GetValue(origin);
+                    var value = originProp.GetValue(origin);
 
-                        if (value != null && IsDefaultValue(value, targetProp.PropertyType))
-                        {
-                            continue;
-                        }
+                    if (value != null && IsDefaultValue(value, targetProp.PropertyType)) continue;
 
-                        targetProp.SetValue(target, value);
-                    }
+                    targetProp.SetValue(target, value);
                 }
-            }
 
-            return target;
-        }
+        return target;
+    }
 
-        private static bool IsDefaultValue(object value, Type type)
-        {
-            if (value == null)
-            {
-                return true;
-            }
-
-            if (type.IsValueType)
-            {
-                return value.Equals(Activator.CreateInstance(type));
-            }
-
-            return false;
-        }
+    private static bool IsDefaultValue(object value, Type type)
+    {
+        return type.IsValueType && value.Equals(Activator.CreateInstance(type));
     }
 }

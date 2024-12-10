@@ -1,5 +1,5 @@
 using API.Interfaces;
-using API.Models;
+using API.Models.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,10 +14,7 @@ public class UserController(IUserService userService) : ControllerBase
     public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
     {
         var success = await userService.RegisterUserAsync(model);
-        if (!success)
-        {
-            return BadRequest(new { message = "Registration failed" });
-        }
+        if (!success) return BadRequest(new { message = "Registration failed" });
 
         return Ok(new { message = "User registered successfully" });
     }
@@ -26,10 +23,7 @@ public class UserController(IUserService userService) : ControllerBase
     public async Task<IActionResult> LoginUser([FromBody] LoginUserModel model)
     {
         var success = await userService.LoginUserAsync(model);
-        if (!success)
-        {
-            return BadRequest(new { message = "Invalid credentials" });
-        }
+        if (!success) return BadRequest(new { message = "Invalid credentials" });
 
         return Ok(new { message = "Login successful" });
     }
@@ -46,11 +40,6 @@ public class UserController(IUserService userService) : ControllerBase
     public async Task<IActionResult> ChangeRole([FromBody] ChangeRoleModel model)
     {
         var result = await userService.ChangeRoleAsync(model);
-        if (result != null)
-        {
-            return Ok(result);
-        }
-
-        return BadRequest(new { message = "Failed to change role" });
+        return Ok(result);
     }
 }

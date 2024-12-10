@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20241210055908_Initial")]
+    [Migration("20241210090745_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -58,7 +58,8 @@ namespace API.Migrations
 
                     b.Property<string>("Details")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<Guid>("ExpenseId")
                         .HasColumnType("uuid");
@@ -95,7 +96,8 @@ namespace API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("VoidReason")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime?>("VoidTime")
                         .HasColumnType("timestamp without time zone");
@@ -148,32 +150,39 @@ namespace API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Barcode")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Brand")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Classification")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Company")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime?>("Expiry")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Formulation")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Generic")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("HasExpiry")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Hash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -188,7 +197,8 @@ namespace API.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Location")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("LowThreshold")
                         .HasColumnType("integer");
@@ -215,6 +225,103 @@ namespace API.Migrations
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("API.Entities.Item.ItemHistoryEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Barcode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Brand")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Classification")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Company")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("Expiry")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Formulation")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Generic")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("HasExpiry")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsExpired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsLow")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsReagent")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("LowThreshold")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Retail")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("Stock")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("UsesLeft")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UsesMax")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Wholesale")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ItemHistories");
+                });
+
             modelBuilder.Entity("API.Entities.User.UserEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -237,14 +344,16 @@ namespace API.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -253,7 +362,8 @@ namespace API.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("MiddleName")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -292,94 +402,6 @@ namespace API.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("API.Item.ItemHistory.ItemHistoryEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Barcode")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Brand")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Classification")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Company")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("Expiry")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Formulation")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Generic")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("HasExpiry")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Hash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsExpired")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsLow")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsReagent")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("ItemId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Location")
-                        .HasColumnType("text");
-
-                    b.Property<int>("LowThreshold")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Retail")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<int>("Stock")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("UsesLeft")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsesMax")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Wholesale")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ItemId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ItemHistories");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -564,7 +586,7 @@ namespace API.Migrations
                     b.Navigation("Item");
                 });
 
-            modelBuilder.Entity("API.Item.ItemHistory.ItemHistoryEntity", b =>
+            modelBuilder.Entity("API.Entities.Item.ItemHistoryEntity", b =>
                 {
                     b.HasOne("API.Entities.Item.ItemEntity", "Item")
                         .WithMany("ItemHistory")

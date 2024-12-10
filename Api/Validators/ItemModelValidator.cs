@@ -6,7 +6,7 @@ namespace API.Validators;
 public class BaseItemModelValidator<T> : AbstractValidator<T>
     where T : BaseItemModel
 {
-    public BaseItemModelValidator()
+    protected BaseItemModelValidator()
     {
         RuleFor(x => x.Barcode).NotEmpty().WithMessage("Barcode is required.");
         RuleFor(x => x.Brand).NotEmpty().WithMessage("Brand is required.");
@@ -21,20 +21,12 @@ public class BaseItemModelValidator<T> : AbstractValidator<T>
             .GreaterThanOrEqualTo(0)
             .WithMessage("LowThreshold must be non-negative.");
         RuleFor(x => x.UsesMax)
-            .GreaterThan(0)
-            .When(x => x.UsesMax.HasValue)
-            .WithMessage("UsesMax must be greater than 0 if specified.");
-
-        RuleFor(x => x.UsesMax)
-            .Null()
-            .When(x => x.IsReagent == false)
-            .WithMessage("UsesMax must be null when isReagent is false.");
-
+            .Must((x, usesMax) => x.IsReagent ? usesMax > 0 : usesMax == null)
+            .WithMessage("UsesMax must be greater than 0 when IsReagent is true, otherwise it must be null.");
         RuleFor(x => x.UsesLeft)
-            .Null()
-            .When(x => x.IsReagent == false)
-            .WithMessage("UsesLeft must be null when isReagent is false.");
-
+            .Must((x, usesLeft) => x.IsReagent ? usesLeft > 0 && usesLeft <= x.UsesMax : usesLeft == null)
+            .WithMessage(
+                "UsesLeft must be greater than 0 and not greater than UsesMax when IsReagent is true, otherwise it must be null.");
         RuleFor(x => x.Expiry)
             .Must((model, expiry) => expiry.HasValue || !model.HasExpiry)
             .When(x => x.HasExpiry)
@@ -46,20 +38,16 @@ public class BaseItemModelValidator<T> : AbstractValidator<T>
             .WithMessage("Expiry must not be a past date.");
     }
 
-    private bool BeTodayOrFutureDate(DateTime? expiry)
+    private static bool BeTodayOrFutureDate(DateTime? expiry)
     {
-        if (expiry.HasValue)
-        {
-            var expiryDate = expiry.Value.Date;
-            return expiryDate >= DateTime.UtcNow.Date;
-        }
-        return false;
+        if (!expiry.HasValue) return false;
+        var expiryDate = expiry.Value.Date;
+        return expiryDate >= DateTime.UtcNow.Date;
     }
 }
 
 public class CreateItemModelValidator : BaseItemModelValidator<CreateItemModel>
 {
-    public CreateItemModelValidator() { }
 }
 
 public class UpdateItemModelValidator : BaseItemModelValidator<UpdateItemModel>

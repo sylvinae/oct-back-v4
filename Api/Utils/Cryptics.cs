@@ -1,9 +1,5 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using API.Entities.User;
-using Microsoft.IdentityModel.Tokens;
 
 namespace API.Utils;
 
@@ -30,7 +26,7 @@ public class Cryptics
             "UsesMax",
             "UsesLeft",
             "IsExpired",
-            "IsDeleted",
+            "IsDeleted"
         };
 
         var propertyValues = itemDto
@@ -42,7 +38,7 @@ public class Cryptics
         var input = string.Join("-", propertyValues);
         var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
         var finalHash = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
-        Console.WriteLine(finalHash.ToString());
+        Console.WriteLine(finalHash);
         return finalHash;
     }
 }

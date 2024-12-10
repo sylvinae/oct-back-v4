@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using API.Entities.User;
-using Newtonsoft.Json;
 
 namespace API.Entities.Expense;
 

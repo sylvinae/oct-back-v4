@@ -2,11 +2,9 @@ using API.Entities.Expense;
 using API.Entities.Invoice;
 using API.Entities.Item;
 using API.Entities.User;
-using API.Item.ItemHistory;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace API.Db;
 

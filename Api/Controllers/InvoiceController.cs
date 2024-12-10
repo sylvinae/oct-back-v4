@@ -3,7 +3,6 @@ using API.Interfaces;
 using API.Models.Invoice;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace API.Controllers;
 
@@ -19,9 +18,9 @@ public class InvoiceController(IInvoiceService invoiceService) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateInvoice([FromBody] CreateInvoiceModel InvoiceModel)
+    public async Task<IActionResult> CreateInvoice([FromBody] CreateInvoiceModel invoiceModel)
     {
-        var (failed, created) = await invoiceService.CreateInvoice(InvoiceModel);
+        var (failed, created) = await invoiceService.CreateInvoice(invoiceModel);
         if (created == null)
             return BadRequest(new { failed });
 

@@ -2,7 +2,6 @@ using API.Db;
 using API.Entities.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace API.Utils;
 
@@ -26,10 +25,7 @@ public static class DbInitializer
     {
         services.AddAuthorization(options =>
         {
-            foreach (var role in Roles)
-            {
-                options.AddPolicy(role, policy => policy.RequireRole(role));
-            }
+            foreach (var role in Roles) options.AddPolicy(role, policy => policy.RequireRole(role));
         });
     }
 
@@ -39,15 +35,11 @@ public static class DbInitializer
     )
     {
         foreach (var role in Roles)
-        {
             if (!await roleManager.RoleExistsAsync(role))
-            {
                 await roleManager.CreateAsync(new IdentityRole<Guid>(role));
-            }
-        }
 
-        var adminEmail = "admin@oct.com";
-        var adminPassword = "Password!1";
+        const string adminEmail = "admin@oct.com";
+        const string adminPassword = "Password!1";
 
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
@@ -58,16 +50,14 @@ public static class DbInitializer
                 Email = adminEmail,
                 FirstName = "Admin",
                 LastName = "Admin",
-                IsDeleted = false,
+                IsDeleted = false
             };
 
             var result = await userManager.CreateAsync(adminUser, adminPassword);
             if (!result.Succeeded)
-            {
                 throw new Exception(
                     $"Failed to create admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}"
                 );
-            }
 
             await userManager.AddToRoleAsync(adminUser, "admin");
         }

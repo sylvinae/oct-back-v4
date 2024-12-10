@@ -9,25 +9,25 @@ using FluentValidation;
 namespace API.Services.Item;
 
 public class UpdateItemService(
-    Context _db,
-    ILogger<UpdateItemService> _log,
-    IItemHistoryService _ih,
-    IValidator<UpdateItemModel> _updateValidator
+    Context db,
+    ILogger<UpdateItemService> log,
+    IItemHistoryService ih,
+    IValidator<UpdateItemModel> updateValidator
 ) : IUpdateItemService
 {
     public async Task<(
         List<FailedResponseItemModel> failed,
         List<ResponseItemModel> updated
-    )> UpdateItems(List<UpdateItemModel> items)
+        )> UpdateItems(List<UpdateItemModel> items)
     {
         var (updated, failed) = (
             new List<ResponseItemModel>(),
             new List<FailedResponseItemModel>()
         );
 
-        if (items == null || items.Count == 0)
+        if (items.Count == 0)
         {
-            _log.LogInformation("No items to update.");
+            log.LogInformation("No items to update.");
             return (failed, updated);
         }
 
@@ -38,17 +38,16 @@ public class UpdateItemService(
                 if (!await ValidateItem(item, failed))
                     continue;
 
-                if (!await ProcessUpdate(item, updated, failed))
-                    continue;
+                await ProcessUpdate(item, updated, failed);
             }
 
-            await _db.SaveChangesAsync();
-            _log.LogInformation("Successfully saved changes to DB.");
+            await db.SaveChangesAsync();
+            log.LogInformation("Successfully saved changes to DB.");
             return (failed, updated);
         }
         catch (Exception ex)
         {
-            _log.LogError(ex, "An error occurred while updating items.");
+            log.LogError(ex, "An error occurred while updating items.");
             return (failed, updated);
         }
     }
@@ -58,14 +57,15 @@ public class UpdateItemService(
         List<FailedResponseItemModel> failed
     )
     {
-        (bool isValid, string? error) = await SuperValidator.Check(_updateValidator, item);
+        var (isValid, error) = await SuperValidator.Check(updateValidator, item);
 
         if (!isValid && error != null)
         {
-            _log.LogWarning("Model state invalid. {x}", error);
+            log.LogWarning("Model state invalid. {x}", error);
             failed.Add(PropCopier.Copy(item, new FailedResponseItemModel { Error = error }));
             return false;
         }
+
         return true;
     }
 
@@ -75,7 +75,7 @@ public class UpdateItemService(
         List<FailedResponseItemModel> failed
     )
     {
-        var existingItem = await _db.Items.FindAsync(item.Id);
+        var existingItem = await db.Items.FindAsync(item.Id);
         if (existingItem == null)
         {
             AddFailedItem(failed, item, $"Item with ID {item.Id} not found.");
@@ -91,14 +91,14 @@ public class UpdateItemService(
 
         try
         {
-            _log.LogInformation("Updating item with ID {ItemId}.", existingItem.Id);
+            log.LogInformation("Updating item with ID {ItemId}.", existingItem.Id);
 
             item.Hash = newHash;
-            _db.Entry(existingItem).CurrentValues.SetValues(item);
+            db.Entry(existingItem).CurrentValues.SetValues(item);
 
             updated.Add(PropCopier.Copy(existingItem, new ResponseItemModel()));
 
-            await _ih.AddItemHistory(
+            await ih.AddItemHistory(
                 PropCopier.Copy(item, new AddItemHistoryModel { ItemId = item.Id, Hash = newHash }),
                 ActionType.Updated
             );
@@ -106,7 +106,7 @@ public class UpdateItemService(
         }
         catch (Exception ex)
         {
-            _log.LogError(ex, "Failed to update item with ID {ItemId}.", item.Id);
+            log.LogError(ex, "Failed to update item with ID {ItemId}.", item.Id);
             AddFailedItem(failed, item, ex.Message);
             return false;
         }

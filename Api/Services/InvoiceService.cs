@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-using System.Xml.Schema;
 using API.Db;
 using API.Entities.Invoice;
 using API.Entities.User;
@@ -14,31 +12,29 @@ using Microsoft.AspNetCore.Identity;
 namespace API.Services;
 
 public class InvoiceService(
-    ILogger<InvoiceService> _log,
-    Context _db,
-    IItemHistoryService _ih,
-    IValidator<CreateInvoiceModel> _createValidator,
-    IValidator<InvoiceItemModel> _InvoiceItemValidator,
-    UserManager<UserEntity> _userManager,
-    IHttpContextAccessor _httpContextAccessor
+    ILogger<InvoiceService> log,
+    Context db,
+    IItemHistoryService ih,
+    IValidator<CreateInvoiceModel> createValidator,
+    IValidator<InvoiceItemModel> invoiceItemValidator,
+    UserManager<UserEntity> userManager,
+    IHttpContextAccessor httpContextAccessor
 ) : IInvoiceService
 {
     public async Task<(
         FailedResponseInvoiceModel? failed,
         ResponseInvoiceModel? success
-    )> CreateInvoice(CreateInvoiceModel invoice)
+        )> CreateInvoice(CreateInvoiceModel invoice)
     {
-        _log.LogInformation("Create Invoice called.");
+        log.LogInformation("Create Invoice called.");
 
         var failed = PropCopier.Copy(invoice, new FailedResponseInvoiceModel());
-        var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext?.User!);
+        var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext?.User!);
 
         var newInvoice = PropCopier.Copy(invoice, new InvoiceEntity());
         var newInvoiceItems = new List<InvoiceItemEntity>();
         var responseInvoiceItems = new List<InvoiceItemModel>();
         var responseInvoice = new ResponseInvoiceModel();
-        bool? isValid;
-        string? error;
 
         if (user == null)
         {
@@ -49,26 +45,26 @@ public class InvoiceService(
         newInvoice.UserId = user.Id;
         newInvoice.IsVoided = false;
 
-        _log.LogInformation("Create Invoice called.");
+        log.LogInformation("Create Invoice called.");
 
         try
         {
-            (isValid, error) = await SuperValidator.Check(_createValidator, invoice);
+            (bool? isValid, var error) = await SuperValidator.Check(createValidator, invoice);
 
             if (!(bool)isValid && error != null)
             {
-                _log.LogWarning("Invalid model state. {x}", error);
+                log.LogWarning("Invalid model state. {x}", error);
                 failed.Error = error;
                 return (failed, null);
             }
 
             foreach (var item in invoice.InvoiceItems)
             {
-                (isValid, error) = await SuperValidator.Check(_InvoiceItemValidator, item);
+                (isValid, error) = await SuperValidator.Check(invoiceItemValidator, item);
 
                 if (!(bool)isValid && error != null)
                 {
-                    _log.LogWarning("Invalid model state. {x}", error);
+                    log.LogWarning("Invalid model state. {x}", error);
                     failed.Error = error;
                     return (failed, null);
                 }
@@ -77,31 +73,33 @@ public class InvoiceService(
                     PropCopier.Copy(item, new InvoiceItemEntity { InvoiceId = newInvoice.Id })
                 );
             }
+
             newInvoice.InvoiceItems = newInvoiceItems;
 
-            var result = await _db.Invoices.AddAsync(newInvoice);
-            _log.LogInformation("Added Invoice {}. Updating item stocks.", result.Entity.Id);
+            var result = await db.Invoices.AddAsync(newInvoice);
+            log.LogInformation("Added Invoice {}. Updating item stocks.", result.Entity.Id);
 
-            if (result.Entity != null)
+
+            foreach (var iitem in result.Entity.InvoiceItems)
             {
-                foreach (var iitem in result.Entity.InvoiceItems)
-                {
-                    int sold = iitem.ItemsSold == null ? 0 : (int)iitem.ItemsSold;
-                    int uses = iitem.UsesConsumed == null ? 0 : (int)iitem.UsesConsumed;
+                var sold = iitem.ItemsSold ?? 0;
+                var uses = iitem.UsesConsumed ?? 0;
 
-                    var itemModResult = ItemMod(iitem.ItemId, ActionType.Purchased, sold, uses);
+                var itemModResult = ItemMod(iitem.ItemId, ActionType.Purchased, sold, uses);
 
-                    responseInvoiceItems.Add(PropCopier.Copy(iitem, new InvoiceItemModel()));
+                responseInvoiceItems.Add(PropCopier.Copy(iitem, new InvoiceItemModel()));
 
-                    if (itemModResult.Result == false)
-                        throw new Exception();
-                }
-                responseInvoice = PropCopier.Copy(
-                    invoice,
-                    new ResponseInvoiceModel { InvoiceItems = responseInvoiceItems }
-                );
+                if (itemModResult.Result == false)
+                    throw new Exception();
             }
-            await _db.SaveChangesAsync();
+
+            responseInvoice = PropCopier.Copy(
+                invoice,
+                new ResponseInvoiceModel { InvoiceItems = responseInvoiceItems }
+            );
+
+
+            await db.SaveChangesAsync();
 
             return (null, responseInvoice);
         }
@@ -114,35 +112,35 @@ public class InvoiceService(
 
     public IQueryable<InvoiceEntity> GetInvoices()
     {
-        _log.LogInformation("Get invoices called");
-        return _db.Invoices;
+        log.LogInformation("Get invoices called");
+        return db.Invoices;
     }
 
-    public async Task<bool> VoidInvoice(VoidInvoiceModel Invoice)
+    public async Task<bool> VoidInvoice(VoidInvoiceModel invoice)
     {
         try
         {
-            _log.LogInformation("Void Invoice called.");
-            var InvoiceItem = await _db.Invoices.FindAsync(Invoice.Id);
-            if (InvoiceItem == null)
+            log.LogInformation("Void Invoice called.");
+            var invoiceItem = await db.Invoices.FindAsync(invoice.Id);
+            if (invoiceItem == null)
                 return false;
 
-            InvoiceItem.IsVoided = true;
-            InvoiceItem.VoidReason = Invoice.VoidReason;
+            invoiceItem.IsVoided = true;
+            invoiceItem.VoidReason = invoice.VoidReason;
 
-            foreach (var item in InvoiceItem.InvoiceItems)
+            foreach (var item in invoiceItem.InvoiceItems)
             {
-                int sold = item.ItemsSold == null ? 0 : (int)item.ItemsSold;
-                int uses = item.UsesConsumed == null ? 0 : (int)item.UsesConsumed;
+                var sold = item.ItemsSold ?? 0;
+                var uses = item.UsesConsumed ?? 0;
                 var result = ItemMod(item.Id, ActionType.Voided, sold, uses);
             }
 
-            await _db.SaveChangesAsync();
+            await db.SaveChangesAsync();
             return true;
         }
         catch (Exception ex)
         {
-            _log.LogError("Error voiding. {x}", ex.ToString());
+            log.LogError("Error voiding. {x}", ex.ToString());
             return false;
         }
     }
@@ -151,18 +149,18 @@ public class InvoiceService(
     {
         try
         {
-            _log.LogInformation("Modding item {x} with action {action}.", itemId, action);
+            log.LogInformation("Modding item {x} with action {action}.", itemId, action);
 
-            var item = await _db.Items.FindAsync(itemId);
+            var item = await db.Items.FindAsync(itemId);
             if (item == null)
             {
-                _log.LogWarning("Item {x} not found.", itemId);
+                log.LogWarning("Item {x} not found.", itemId);
                 return false;
             }
 
             if (quantity == 0 && uses == 0)
             {
-                _log.LogWarning(
+                log.LogWarning(
                     "No modification needed for item {x}. Quantity and uses are zero.",
                     itemId
                 );
@@ -186,15 +184,15 @@ public class InvoiceService(
                 forIh.UsesLeft += uses;
             }
 
-            string newHash = Cryptics.ComputeHash(forIh);
+            var newHash = Cryptics.ComputeHash(forIh);
             item.Hash = newHash;
 
-            await _ih.AddItemHistory(
+            await ih.AddItemHistory(
                 PropCopier.Copy(item, new AddItemHistoryModel { ItemId = item.Id }),
                 action
             );
 
-            _log.LogInformation(
+            log.LogInformation(
                 "Item {x} modded successfully with action {action}.",
                 itemId,
                 action
@@ -203,7 +201,7 @@ public class InvoiceService(
         }
         catch (Exception ex)
         {
-            _log.LogError("Error modding item {x}. Exception: {ex}", itemId, ex);
+            log.LogError("Error modding item {x}. Exception: {ex}", itemId, ex);
             return false;
         }
     }

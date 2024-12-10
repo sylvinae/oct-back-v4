@@ -1,27 +1,26 @@
 using API.Db;
+using API.Entities.Item;
 using API.Entities.User;
 using API.Interfaces;
-using API.Item.ItemHistory;
 using API.Models.Item;
 using API.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using SQLitePCL;
 
 namespace API.Services;
 
 public class ItemHistoryService(
-    Context _db,
-    ILogger<ItemHistoryService> _log,
-    UserManager<UserEntity> _userManager,
-    IHttpContextAccessor _httpContextAccessor
+    Context db,
+    ILogger<ItemHistoryService> log,
+    UserManager<UserEntity> userManager,
+    IHttpContextAccessor httpContextAccessor
 ) : IItemHistoryService
 {
     public async Task<bool> AddItemHistory(AddItemHistoryModel itemHistory, ActionType action)
     {
         try
         {
-            var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext?.User!);
+            var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext?.User!);
 
             if (user != null)
             {
@@ -30,8 +29,8 @@ public class ItemHistoryService(
                     new ItemHistoryEntity { ItemId = itemHistory.ItemId, UserId = user.Id }
                 );
                 itemHistoryEntity.Action = action.ToString();
-                var result = await _db.ItemHistories.AddAsync(itemHistoryEntity);
-                _log.LogInformation(
+                await db.ItemHistories.AddAsync(itemHistoryEntity);
+                log.LogInformation(
                     "Added {action} history to item {id}",
                     action.ToString(),
                     itemHistory.ItemId
@@ -42,7 +41,7 @@ public class ItemHistoryService(
         }
         catch (Exception ex)
         {
-            _log.LogError("Error adding history. {x}", ex);
+            log.LogError("Error adding history. {x}", ex);
             return false;
         }
     }
@@ -53,12 +52,9 @@ public class ItemHistoryService(
         {
             var response = new List<ResponseItemHistoryModel>();
 
-            var result = await _db.ItemHistories.Where(ih => ih.ItemId == itemId).ToListAsync();
+            var result = await db.ItemHistories.Where(ih => ih.ItemId == itemId).ToListAsync();
 
-            foreach (var item in result)
-            {
-                response.Add(PropCopier.Copy(item, new ResponseItemHistoryModel()));
-            }
+            foreach (var item in result) response.Add(PropCopier.Copy(item, new ResponseItemHistoryModel()));
 
             return response;
         }

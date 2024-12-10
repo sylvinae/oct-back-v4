@@ -1,5 +1,4 @@
 using API.Entities.Item;
-using API.Interfaces;
 using API.Interfaces.Item;
 using API.Models.Item;
 using Microsoft.AspNetCore.Authorization;
@@ -27,7 +26,7 @@ public class ItemController(
 
     [Authorize(Roles = "admin")]
     [HttpPost]
-    public async Task<IActionResult> CreateItems([FromBody] List<CreateItemModel>? items)
+    public async Task<IActionResult> CreateItems([FromBody] List<CreateItemModel> items)
     {
         var (failed, created) = await c.CreateItems(items);
 

@@ -7,20 +7,21 @@ using API.Utils;
 namespace API.Services.Item;
 
 public class RestoreItemService(
-    Context _db,
-    ILogger<RestoreItemService> _log,
-    IItemHistoryService _ih
+    Context db,
+    ILogger<RestoreItemService> log,
+    IItemHistoryService ih
 ) : IRestoreItemService
 {
     public async Task<(List<Guid> failed, List<Guid> restored)> RestoreItems(List<Guid> itemIds)
     {
         var (failed, restored) = (new List<Guid>(), new List<Guid>());
 
-        if (itemIds == null || itemIds.Count == 0)
+        if (itemIds.Count == 0)
         {
-            _log.LogInformation("No items to delete.");
+            log.LogInformation("No items to delete.");
             return (failed, restored);
         }
+
         restored = await ProcessRestoration(itemIds);
 
         return (failed, restored);
@@ -32,17 +33,17 @@ public class RestoreItemService(
 
         foreach (var id in itemIds)
         {
-            var item = await _db.Items.FindAsync(id);
+            var item = await db.Items.FindAsync(id);
             if (item == null)
             {
-                _log.LogWarning("Item with ID {ItemId} not found.", id);
+                log.LogWarning("Item with ID {ItemId} not found.", id);
                 continue;
             }
 
             item.IsDeleted = true;
             restored.Add(id);
 
-            await _ih.AddItemHistory(
+            await ih.AddItemHistory(
                 PropCopier.Copy(
                     item,
                     new AddItemHistoryModel { ItemId = item.Id, Hash = item.Hash }
@@ -51,7 +52,7 @@ public class RestoreItemService(
             );
         }
 
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         return restored;
     }

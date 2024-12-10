@@ -6,8 +6,9 @@ namespace API.Interfaces;
 public interface IInvoiceService
 {
     Task<(FailedResponseInvoiceModel? failed, ResponseInvoiceModel? success)> CreateInvoice(
-        CreateInvoiceModel Invoice
+        CreateInvoiceModel invoice
     );
-    Task<bool> VoidInvoice(VoidInvoiceModel Invoice);
+
+    Task<bool> VoidInvoice(VoidInvoiceModel invoice);
     IQueryable<InvoiceEntity> GetInvoices();
 }

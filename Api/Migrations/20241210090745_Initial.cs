@@ -31,9 +31,9 @@ namespace API.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    FirstName = table.Column<string>(type: "text", nullable: false),
-                    MiddleName = table.Column<string>(type: "text", nullable: true),
-                    LastName = table.Column<string>(type: "text", nullable: false),
+                    FirstName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    MiddleName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -60,23 +60,23 @@ namespace API.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Barcode = table.Column<string>(type: "text", nullable: true),
-                    Brand = table.Column<string>(type: "text", nullable: true),
-                    Generic = table.Column<string>(type: "text", nullable: true),
-                    Classification = table.Column<string>(type: "text", nullable: true),
-                    Formulation = table.Column<string>(type: "text", nullable: true),
-                    Location = table.Column<string>(type: "text", nullable: true),
+                    Barcode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Brand = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Generic = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Classification = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Formulation = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Location = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     Wholesale = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Retail = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: false),
                     LowThreshold = table.Column<int>(type: "integer", nullable: false),
-                    Company = table.Column<string>(type: "text", nullable: true),
+                    Company = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     HasExpiry = table.Column<bool>(type: "boolean", nullable: false),
                     Expiry = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     IsReagent = table.Column<bool>(type: "boolean", nullable: false),
                     UsesLeft = table.Column<int>(type: "integer", nullable: true),
                     UsesMax = table.Column<int>(type: "integer", nullable: true),
-                    Hash = table.Column<string>(type: "text", nullable: false),
+                    Hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     IsLow = table.Column<bool>(type: "boolean", nullable: false),
                     IsExpired = table.Column<bool>(type: "boolean", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
@@ -224,7 +224,7 @@ namespace API.Migrations
                     TotalDiscountedPrice = table.Column<decimal>(type: "numeric", nullable: true),
                     IsVoided = table.Column<bool>(type: "boolean", nullable: false),
                     VoidTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    VoidReason = table.Column<string>(type: "text", nullable: true)
+                    VoidReason = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -244,27 +244,27 @@ namespace API.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ItemId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Barcode = table.Column<string>(type: "text", nullable: true),
-                    Brand = table.Column<string>(type: "text", nullable: true),
-                    Generic = table.Column<string>(type: "text", nullable: true),
-                    Classification = table.Column<string>(type: "text", nullable: true),
-                    Formulation = table.Column<string>(type: "text", nullable: true),
-                    Location = table.Column<string>(type: "text", nullable: true),
+                    Barcode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Brand = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Generic = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Classification = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Formulation = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Location = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     Wholesale = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Retail = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: false),
                     LowThreshold = table.Column<int>(type: "integer", nullable: false),
-                    Company = table.Column<string>(type: "text", nullable: true),
+                    Company = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     HasExpiry = table.Column<bool>(type: "boolean", nullable: false),
                     Expiry = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     IsReagent = table.Column<bool>(type: "boolean", nullable: false),
                     UsesLeft = table.Column<int>(type: "integer", nullable: true),
                     UsesMax = table.Column<int>(type: "integer", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
-                    Hash = table.Column<string>(type: "text", nullable: false),
+                    Hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     IsLow = table.Column<bool>(type: "boolean", nullable: false),
                     IsExpired = table.Column<bool>(type: "boolean", nullable: false),
-                    Action = table.Column<string>(type: "text", nullable: false)
+                    Action = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -289,7 +289,7 @@ namespace API.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ExpenseId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Details = table.Column<string>(type: "text", nullable: false),
+                    Details = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     Amount = table.Column<decimal>(type: "numeric", nullable: false)
                 },
                 constraints: table =>
