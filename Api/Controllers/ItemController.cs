@@ -1,5 +1,6 @@
 using API.Entities.Item;
 using API.Interfaces;
+using API.Interfaces.Item;
 using API.Models.Item;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,20 +10,26 @@ namespace API.Controllers;
 
 [Route("api/items")]
 [ApiController]
-public class ItemController(IItemService itemService) : ControllerBase
+public class ItemController(
+    ICreateItemService c,
+    IGetItemService g,
+    IUpdateItemService u,
+    IDeleteItemService d,
+    IRestoreItemService r
+) : ControllerBase
 {
     [HttpGet]
     [EnableQuery]
     public ActionResult<IQueryable<ItemEntity>> GetAllItems()
     {
-        return Ok(itemService.GetAllItems());
+        return Ok(g.GetAllItems());
     }
 
     [Authorize(Roles = "admin")]
     [HttpPost]
-    public async Task<IActionResult> CreateItems([FromBody] List<CreateItemModel> items)
+    public async Task<IActionResult> CreateItems([FromBody] List<CreateItemModel>? items)
     {
-        var (failed, created) = await itemService.CreateItems(items);
+        var (failed, created) = await c.CreateItems(items);
 
         if (created.Count == 0)
             return BadRequest(new { failed });
@@ -40,7 +47,7 @@ public class ItemController(IItemService itemService) : ControllerBase
     [HttpPut]
     public async Task<IActionResult> UpdateItems([FromBody] List<UpdateItemModel> updateItemModel)
     {
-        var (failed, updated) = await itemService.UpdateItems(updateItemModel);
+        var (failed, updated) = await u.UpdateItems(updateItemModel);
         if (updated.Count == 0)
             return BadRequest(new { failed });
         if (failed.Count != 0)
@@ -53,7 +60,7 @@ public class ItemController(IItemService itemService) : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteItems([FromBody] List<Guid> ids)
     {
-        var (failed, deleted) = await itemService.DeleteItems(ids);
+        var (failed, deleted) = await d.DeleteItems(ids);
         if (deleted.Count == 0)
             return BadRequest(new { failed });
         if (failed.Count != 0)
@@ -66,7 +73,7 @@ public class ItemController(IItemService itemService) : ControllerBase
     [HttpPut("restore")]
     public async Task<IActionResult> RestoreItems([FromBody] List<Guid> ids)
     {
-        var (failed, restored) = await itemService.RestoreItems(ids);
+        var (failed, restored) = await r.RestoreItems(ids);
         if (restored.Count == 0)
             return BadRequest(new { failed });
         if (failed.Count != 0)
