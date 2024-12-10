@@ -17,8 +17,6 @@ public class ItemService(
     IValidator<UpdateItemModel> _updateValidator
 ) : IItemService
 {
-    //create items
-    //manual model validation
     public async Task<(
         List<FailedResponseItemModel> failed,
         List<ResponseItemModel> created
@@ -83,7 +81,7 @@ public class ItemService(
                     await _ih.AddItemHistory(
                         PropCopier.Copy(
                             item,
-                            new AdddItemHistoryModel { ItemId = result.Entity.Id, Hash = hash }
+                            new AddItemHistoryModel { ItemId = result.Entity.Id, Hash = hash }
                         ),
                         ActionType.Created
                     );
@@ -202,7 +200,7 @@ public class ItemService(
                 await _ih.AddItemHistory(
                     PropCopier.Copy(
                         item,
-                        new AdddItemHistoryModel { ItemId = item.Id, Hash = newHash }
+                        new AddItemHistoryModel { ItemId = item.Id, Hash = newHash }
                     ),
                     ActionType.Updated
                 );
@@ -267,7 +265,7 @@ public class ItemService(
                 await _ih.AddItemHistory(
                     PropCopier.Copy(
                         item,
-                        new AdddItemHistoryModel { ItemId = item.Id, Hash = newHash }
+                        new AddItemHistoryModel { ItemId = item.Id, Hash = newHash }
                     ),
                     ActionType.Updated
                 );
@@ -342,7 +340,7 @@ public class ItemService(
                 await _ih.AddItemHistory(
                     PropCopier.Copy(
                         item,
-                        new AdddItemHistoryModel { ItemId = item.Id, Hash = item.Hash }
+                        new AddItemHistoryModel { ItemId = item.Id, Hash = item.Hash }
                     ),
                     ActionType.Updated
                 );
@@ -389,7 +387,7 @@ public class ItemService(
             item.IsDeleted = true;
 
             await _ih.AddItemHistory(
-                PropCopier.Copy(item, new AdddItemHistoryModel { ItemId = item.Id }),
+                PropCopier.Copy(item, new AddItemHistoryModel { ItemId = item.Id }),
                 ActionType.Deleted
             );
 
@@ -453,7 +451,7 @@ public class ItemService(
                 _log.LogInformation("Restoring item {ItemId}.", itemId);
 
                 await _ih.AddItemHistory(
-                    PropCopier.Copy(item, new AdddItemHistoryModel { ItemId = item.Id }),
+                    PropCopier.Copy(item, new AddItemHistoryModel { ItemId = item.Id }),
                     ActionType.Restored
                 );
 
@@ -500,7 +498,7 @@ public class ItemService(
             item.IsDeleted = false;
 
             await _ih.AddItemHistory(
-                PropCopier.Copy(item, new AdddItemHistoryModel { ItemId = item.Id }),
+                PropCopier.Copy(item, new AddItemHistoryModel { ItemId = item.Id }),
                 ActionType.Restored
             );
 
@@ -528,118 +526,4 @@ public class ItemService(
 
         return null;
     }
-
-    // public async Task<(List<ResponseItemModel> items, int count)> SearchItems(
-    //     string query,
-    //     int page,
-    //     int limit,
-    //     bool isdeleted,
-    //     bool isExpired,
-    //     bool isReagent,
-    //     bool isLow,
-    //     bool includeHistory,
-    //     bool? hasExpiry
-    // )
-    // {
-    //     try
-    //     {
-    //         var baseQuery = _db.Items.Where(i => !i.IsDeleted);
-
-    //         if (!string.IsNullOrWhiteSpace(query))
-    //         {
-    //             query = query.ToLower();
-    //             baseQuery = baseQuery.Where(i =>
-    //                 (i.Barcode ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-    //                 || (i.Brand ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-    //                 || (i.Generic ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-    //                 || (i.Classification ?? "").Contains(
-    //                     query,
-    //                     StringComparison.CurrentCultureIgnoreCase
-    //                 )
-    //                 || (i.Formulation ?? "").Contains(
-    //                     query,
-    //                     StringComparison.CurrentCultureIgnoreCase
-    //                 )
-    //                 || (i.Location ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-    //                 || (i.Company ?? "").Contains(query, StringComparison.CurrentCultureIgnoreCase)
-    //                 || (i.Wholesale.ToString() ?? "").Contains(
-    //                     query,
-    //                     StringComparison.CurrentCultureIgnoreCase
-    //                 )
-    //                 || (i.Retail.ToString() ?? "").Contains(
-    //                     query,
-    //                     StringComparison.CurrentCultureIgnoreCase
-    //                 )
-    //             );
-    //             // baseQuery = baseQuery.Where(i =>
-    //             //     (i.Barcode ?? "").ToLower().Contains(query)
-    //             //     || (i.Brand ?? "").ToLower().Contains(query)
-    //             //     || (i.Generic ?? "").ToLower().Contains(query)
-    //             //     || (i.Classification ?? "").ToLower().Contains(query)
-    //             //     || (i.Formulation ?? "").ToLower().Contains(query)
-    //             //     || (i.Location ?? "").ToLower().Contains(query)
-    //             //     || (i.Company ?? "").ToLower().Contains(query)
-    //             //     || (i.Wholesale.ToString() ?? "").ToLower().Contains(query)
-    //             //     || (i.Retail.ToString() ?? "").ToLower().Contains(query)
-    //             // );
-    //         }
-    //         baseQuery = isExpired ? baseQuery.Where(i => i.IsExpired) : baseQuery;
-    //         baseQuery = isReagent ? baseQuery.Where(i => i.IsExpired) : baseQuery;
-    //         baseQuery = isLow ? baseQuery.Where(i => i.IsExpired) : baseQuery;
-    //         baseQuery = includeHistory ? baseQuery.Include(i => i.ItemHistory) : baseQuery;
-
-    //         baseQuery = hasExpiry.HasValue
-    //             ? baseQuery.Where(i => i.IsExpired == hasExpiry.Value)
-    //             : baseQuery;
-
-    //         var totalCount = await baseQuery.CountAsync();
-
-    //         var items = await baseQuery
-    //             .OrderBy(i => i.Id)
-    //             .Skip((page - 1) * limit)
-    //             .Take(limit)
-    //             .ToListAsync();
-
-    //         var response = items
-    //             .Select(item =>
-    //                 PropCopier.Copy(
-    //                     item,
-    //                     new ResponseItemModel
-    //                     {
-    //                         Id = item.Id,
-    //                         ItemHistory = includeHistory
-    //                             ? item
-    //                                 .ItemHistory?.Select(h =>
-    //                                     PropCopier.Copy(
-    //                                         h,
-    //                                         new ResponseItemHistoryModel
-    //                                         {
-    //                                             Id = h.Id,
-    //                                             UserId = h.UserId,
-    //                                             ItemId = h.ItemId,
-    //                                         }
-    //                                     )
-    //                                 )
-    //                                 .ToList()
-    //                             : null,
-    //                     }
-    //                 )
-    //             )
-    //             .ToList();
-
-    //         return (response, totalCount);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         _log.LogError(
-    //             ex,
-    //             "An error occurred while searching items. Query: {Query}, Page: {Page}, Limit: {Limit}, IncludeHistory: {IncludeHistory}",
-    //             query,
-    //             page,
-    //             limit,
-    //             includeHistory
-    //         );
-    //         throw;
-    //     }
-    // }
 }

@@ -7,7 +7,7 @@ namespace API.Entities.Expense;
 public class ExpenseItemEntity
 {
     [Required]
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     public Guid ExpenseId { get; set; }

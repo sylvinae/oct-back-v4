@@ -4,6 +4,7 @@ using API.Db;
 using API.Entities.User;
 using API.Utils;
 using FluentValidation;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData;
@@ -28,6 +29,15 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<Context>();
 builder.Services.AddAuthorizationPolicies();
 
+// builder
+//     .Services.AddIdentity<UserEntity, IdentityRole<Guid>>(options =>
+//     {
+//         options.SignIn.RequireConfirmedEmail = false;
+//         options.Tokens.AuthenticatorTokenProvider = "";
+//     })
+//     .AddEntityFrameworkStores<Context>()
+//     .AddDefaultTokenProviders();
+
 builder
     .Services.AddIdentity<UserEntity, IdentityRole<Guid>>(options =>
     {
@@ -35,7 +45,18 @@ builder
         options.Tokens.AuthenticatorTokenProvider = "";
     })
     .AddEntityFrameworkStores<Context>()
-    .AddDefaultTokenProviders();
+    .AddDefaultTokenProviders()
+    .AddTokenProvider<DataProtectorTokenProvider<UserEntity>>(TokenOptions.DefaultProvider);
+
+// Enable Security Stamp Validation
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnValidatePrincipal = SecurityStampValidator.ValidatePrincipalAsync;
+});
+builder
+    .Services.AddDataProtection()
+    .SetApplicationName("PharmacyAppAPI")
+    .UseEphemeralDataProtectionProvider();
 
 // Add OData support
 builder
@@ -45,8 +66,6 @@ builder
     {
         options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
     });
-
-// builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
@@ -63,8 +82,8 @@ using (var scope = app.Services.CreateScope())
     await DbInitializer.Initialize(serviceProvider, userManager, roleManager);
 }
 
-app.MapControllers();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapControllers();
 
 app.Run();

@@ -310,7 +310,7 @@ namespace API.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     InvoiceId = table.Column<Guid>(type: "uuid", nullable: false),
                     ItemId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ItemQuantity = table.Column<int>(type: "integer", nullable: true),
+                    ItemsSold = table.Column<int>(type: "integer", nullable: true),
                     UsesConsumed = table.Column<int>(type: "integer", nullable: true),
                     ItemPrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     DiscountedPrice = table.Column<decimal>(type: "numeric", nullable: true)

@@ -9,7 +9,7 @@ namespace API.Item.ItemHistory;
 public class ItemHistoryEntity
 {
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     public Guid ItemId { get; set; }

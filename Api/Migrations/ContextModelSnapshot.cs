@@ -123,7 +123,7 @@ namespace API.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<int?>("ItemQuantity")
+                    b.Property<int?>("ItemsSold")
                         .HasColumnType("integer");
 
                     b.Property<int?>("UsesConsumed")

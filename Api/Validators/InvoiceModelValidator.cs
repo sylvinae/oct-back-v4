@@ -4,13 +4,10 @@ using FluentValidation;
 
 namespace API.Validators
 {
-    // Validator for BaseInvoiceModel, validating shared properties
     public class BaseInvoiceModelValidator : AbstractValidator<BaseInvoiceModel>
     {
         public BaseInvoiceModelValidator()
         {
-            RuleFor(x => x.UserId).NotEmpty().WithMessage("User ID is required.");
-
             RuleFor(x => x.InvoiceDate).NotEmpty().WithMessage("Invoice date is required.");
 
             RuleFor(x => x.AmountTendered)
@@ -28,31 +25,25 @@ namespace API.Validators
         }
     }
 
-    // Validator for CreateInvoiceModel, which includes InvoiceItems
     public class CreateInvoiceModelValidator : AbstractValidator<CreateInvoiceModel>
     {
         public CreateInvoiceModelValidator()
         {
-            // Base validation for the shared properties from BaseInvoiceModel
             Include(new BaseInvoiceModelValidator());
 
-            // Additional validation for InvoiceItems in CreateInvoiceModel
             RuleFor(x => x.InvoiceItems)
                 .NotEmpty()
                 .WithMessage("Invoice items are required.")
                 .Must(items => items.Count > 0)
-                .WithMessage("At least one invoice item is required.");
-
-            // Further item-level validation can go here, if needed (e.g., each item in the collection)
+                .WithMessage("At least one Invoice item is required.");
         }
     }
 
-    // Validator for VoidInvoiceModel
     public class VoidInvoiceModelValidator : AbstractValidator<VoidInvoiceModel>
     {
         public VoidInvoiceModelValidator()
         {
-            RuleFor(x => x.InvoiceId).NotEmpty().WithMessage("Invoice ID is required.");
+            RuleFor(x => x.Id).NotEmpty().WithMessage("Invoice ID is required.");
 
             RuleFor(x => x.VoidReason)
                 .NotEmpty()

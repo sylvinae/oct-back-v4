@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 
 namespace API.Models.Invoice;
@@ -38,6 +39,12 @@ public class ResponseInvoiceModel : BaseInvoiceModel
     public ICollection<InvoiceItemModel>? InvoiceItems { get; set; } = [];
 }
 
+public class FailedResponseInvoiceModel : BaseInvoiceModel
+{
+    [JsonProperty("error")]
+    public string Error { get; set; } = null!;
+}
+
 public class CreateInvoiceModel : BaseInvoiceModel
 {
     [JsonProperty("invoiceItems")]
@@ -46,9 +53,9 @@ public class CreateInvoiceModel : BaseInvoiceModel
 
 public class VoidInvoiceModel
 {
-    [JsonProperty("invoiceId")]
+    [JsonProperty("id")]
     [Required]
-    public Guid InvoiceId { get; set; }
+    public Guid Id { get; set; }
 
     [JsonProperty("voidReason")]
     [Required]

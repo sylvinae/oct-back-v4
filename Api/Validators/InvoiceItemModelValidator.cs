@@ -7,13 +7,11 @@ public class InvoiceItemModelValidator : AbstractValidator<InvoiceItemModel>
 {
     public InvoiceItemModelValidator()
     {
-        RuleFor(x => x.InvoiceId).NotEmpty().WithMessage("InvoiceId is required.");
-
         RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId is required.");
 
-        RuleFor(x => x.ItemQuantity)
+        RuleFor(x => x.ItemsSold)
             .GreaterThan(0)
-            .When(x => x.ItemQuantity.HasValue)
+            .When(x => x.ItemsSold.HasValue)
             .WithMessage("ItemQuantity must be greater than 0 if specified.");
 
         RuleFor(x => x.UsesConsumed)

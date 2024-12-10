@@ -17,7 +17,7 @@ public class ItemHistoryService(
     IHttpContextAccessor _httpContextAccessor
 ) : IItemHistoryService
 {
-    public async Task<bool> AddItemHistory(AdddItemHistoryModel itemHistory, ActionType action)
+    public async Task<bool> AddItemHistory(AddItemHistoryModel itemHistory, ActionType action)
     {
         try
         {
@@ -40,8 +40,9 @@ public class ItemHistoryService(
 
             return true;
         }
-        catch (System.Exception)
+        catch (Exception ex)
         {
+            _log.LogError("Error adding history. {x}", ex);
             return false;
         }
     }

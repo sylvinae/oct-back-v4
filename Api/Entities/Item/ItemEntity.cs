@@ -10,7 +10,7 @@ namespace API.Entities.Item;
 public class ItemEntity
 {
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     public string? Barcode { get; set; }
 
@@ -55,6 +55,7 @@ public class ItemEntity
     public bool IsExpired { get; set; }
     public bool IsDeleted { get; set; }
 
+    [JsonIgnore]
     public ICollection<InvoiceItemEntity> InvoiceItems { get; set; } = [];
     public ICollection<ItemHistoryEntity> ItemHistory { get; set; } = [];
 }

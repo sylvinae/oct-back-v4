@@ -7,7 +7,7 @@ namespace API.Entities.Invoice;
 public class InvoiceEntity
 {
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     public Guid UserId { get; set; }

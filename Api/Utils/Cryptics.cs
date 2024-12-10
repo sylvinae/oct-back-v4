@@ -28,7 +28,9 @@ public class Cryptics
             "Expiry",
             "IsReagent",
             "UsesMax",
+            "UsesLeft",
             "IsExpired",
+            "IsDeleted",
         };
 
         var propertyValues = itemDto
@@ -39,6 +41,8 @@ public class Cryptics
 
         var input = string.Join("-", propertyValues);
         var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
-        return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+        var finalHash = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+        Console.WriteLine(finalHash.ToString());
+        return finalHash;
     }
 }

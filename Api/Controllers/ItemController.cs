@@ -18,8 +18,8 @@ public class ItemController(IItemService itemService) : ControllerBase
         return Ok(itemService.GetAllItems());
     }
 
-    [HttpPost]
     [Authorize(Roles = "admin")]
+    [HttpPost]
     public async Task<IActionResult> CreateItems([FromBody] List<CreateItemModel> items)
     {
         var (failed, created) = await itemService.CreateItems(items);
@@ -36,8 +36,8 @@ public class ItemController(IItemService itemService) : ControllerBase
         );
     }
 
-    [HttpPut]
     [Authorize(Roles = "admin")]
+    [HttpPut]
     public async Task<IActionResult> UpdateItems([FromBody] List<UpdateItemModel> updateItemModel)
     {
         var (failed, updated) = await itemService.UpdateItems(updateItemModel);
@@ -49,8 +49,8 @@ public class ItemController(IItemService itemService) : ControllerBase
         return Ok(new { updated });
     }
 
-    [HttpDelete]
     [Authorize(Roles = "admin")]
+    [HttpDelete]
     public async Task<IActionResult> DeleteItems([FromBody] List<Guid> ids)
     {
         var (failed, deleted) = await itemService.DeleteItems(ids);
@@ -62,8 +62,8 @@ public class ItemController(IItemService itemService) : ControllerBase
         return Ok(new { deleted });
     }
 
-    [HttpPut("restore")]
     [Authorize(Roles = "admin")]
+    [HttpPut("restore")]
     public async Task<IActionResult> RestoreItems([FromBody] List<Guid> ids)
     {
         var (failed, restored) = await itemService.RestoreItems(ids);

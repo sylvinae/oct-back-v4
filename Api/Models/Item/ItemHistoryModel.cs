@@ -76,7 +76,7 @@ public class BaseItemHistoryModel
     public string? Action { get; set; }
 }
 
-public class AdddItemHistoryModel : BaseItemHistoryModel { }
+public class AddItemHistoryModel : BaseItemHistoryModel { }
 
 public class ResponseItemHistoryModel : BaseItemHistoryModel
 {
