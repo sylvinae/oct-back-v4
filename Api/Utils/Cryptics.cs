@@ -17,14 +17,12 @@ public class Cryptics
             "Location",
             "Wholesale",
             "Retail",
-            "Stock",
             "LowThreshold",
             "Company",
             "HasExpiry",
             "Expiry",
             "IsReagent",
             "UsesMax",
-            "UsesLeft",
             "IsExpired",
             "IsDeleted"
         };

@@ -48,7 +48,7 @@ public class RestoreItemService(
                     item,
                     new AddItemHistoryModel { ItemId = item.Id, Hash = item.Hash }
                 ),
-                ActionType.Updated
+                ActionType.Restored
             );
         }
 

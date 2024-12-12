@@ -14,7 +14,8 @@ public class ItemController(
     IGetItemService g,
     IUpdateItemService u,
     IDeleteItemService d,
-    IRestoreItemService r
+    IRestoreItemService re,
+    IRestockItemService rs
 ) : ControllerBase
 {
     [HttpGet]
@@ -44,9 +45,9 @@ public class ItemController(
 
     [Authorize(Roles = "admin")]
     [HttpPut]
-    public async Task<IActionResult> UpdateItems([FromBody] List<UpdateItemModel> updateItemModel)
+    public async Task<IActionResult> UpdateItems([FromBody] List<UpdateItemModel> items)
     {
-        var (failed, updated) = await u.UpdateItems(updateItemModel);
+        var (failed, updated) = await u.UpdateItems(items);
         if (updated.Count == 0)
             return BadRequest(new { failed });
         if (failed.Count != 0)
@@ -72,12 +73,22 @@ public class ItemController(
     [HttpPut("restore")]
     public async Task<IActionResult> RestoreItems([FromBody] List<Guid> ids)
     {
-        var (failed, restored) = await r.RestoreItems(ids);
+        var (failed, restored) = await re.RestoreItems(ids);
         if (restored.Count == 0)
             return BadRequest(new { failed });
         if (failed.Count != 0)
             return BadRequest(new { failed, restored });
 
         return Ok(new { restored });
+    }
+
+    [Authorize(Roles = "admin")]
+    [HttpPost]
+    public async Task<IActionResult> RestockItems([FromBody] List<CreateRestockItemModel> items)
+    {
+        var (failed, restocked) = await rs.RestockItemsAsync(items);
+        if (restocked.Count == 0)
+            return BadRequest(new { failed });
+        return failed.Count != 0 ? Ok(new { failed, restocked }) : Ok(new { restocked });
     }
 }

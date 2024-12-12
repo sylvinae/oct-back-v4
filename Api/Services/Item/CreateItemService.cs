@@ -20,7 +20,7 @@ public class CreateItemService(
     public async Task<(
         List<FailedResponseItemModel> failed,
         List<ResponseItemModel> created
-    )> CreateItems(List<CreateItemModel> items)
+        )> CreateItems(List<CreateItemModel> items)
     {
         log.LogInformation("Create Items called.");
 
@@ -34,7 +34,6 @@ public class CreateItemService(
         }
 
         foreach (var item in items)
-        {
             try
             {
                 var (isValid, validationError) = await ValidateItem(item);
@@ -64,8 +63,8 @@ public class CreateItemService(
                 );
                 AddToFailedList(item, ex.Message, failed);
             }
-        }
 
+        await db.SaveChangesAsync();
         log.LogInformation("Finished creating items. Exiting.");
         return (failed, created);
     }
@@ -114,9 +113,9 @@ public class CreateItemService(
 
         await db.Items.AddAsync(itemEntity);
         await ih.AddItemHistory(itemHistory, ActionType.Created);
-        await db.SaveChangesAsync();
+
 
         log.LogInformation("Created item with ID {ItemId}.", itemEntity.Id);
-        return PropCopier.Copy(itemEntity, new ResponseItemModel { ItemHistory = null });
+        return PropCopier.Copy(itemEntity, new ResponseItemModel());
     }
 }

@@ -21,6 +21,7 @@ public class DeleteItemService(
             log.LogInformation("No items to delete.");
             return (failed, deleted);
         }
+
         deleted = await ProcessDeletion(itemIds);
 
         return (failed, deleted);
@@ -47,7 +48,7 @@ public class DeleteItemService(
                     item,
                     new AddItemHistoryModel { ItemId = item.Id, Hash = item.Hash }
                 ),
-                ActionType.Updated
+                ActionType.Deleted
             );
         }
 

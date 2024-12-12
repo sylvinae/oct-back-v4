@@ -37,11 +37,14 @@ public class BaseItemModel
     [JsonProperty("expiry")] public DateTime? Expiry { get; set; }
 }
 
-public class CreateItemModel : BaseItemModel
-{
-}
+public class CreateItemModel : BaseItemModel;
 
 public class UpdateItemModel : BaseItemModel
+{
+    [JsonProperty("id")] public Guid Id { get; set; }
+}
+
+public class CreateRestockItemModel : BaseItemModel
 {
     [JsonProperty("id")] public Guid Id { get; set; }
 }
@@ -49,8 +52,6 @@ public class UpdateItemModel : BaseItemModel
 public class ResponseItemModel : BaseItemModel
 {
     [JsonProperty("id")] public Guid Id { get; set; }
-
-    [JsonProperty("hash")] public string Hash { get; set; } = null!;
 
     [JsonProperty("isLow")] public bool IsLow { get; set; }
 

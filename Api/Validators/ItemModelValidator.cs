@@ -46,15 +46,12 @@ public class BaseItemModelValidator<T> : AbstractValidator<T>
     }
 }
 
-public class CreateItemModelValidator : BaseItemModelValidator<CreateItemModel>
-{
-}
+public class CreateItemModelValidator : BaseItemModelValidator<CreateItemModel>;
 
 public class UpdateItemModelValidator : BaseItemModelValidator<UpdateItemModel>
 {
     public UpdateItemModelValidator()
     {
         RuleFor(x => x.Id).NotEmpty().WithMessage("ID is required.");
-      
     }
 }
