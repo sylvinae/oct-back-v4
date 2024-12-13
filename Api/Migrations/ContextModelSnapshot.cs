@@ -233,6 +233,9 @@ namespace API.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<DateTime?>("ActionTaken")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("Barcode")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -567,7 +570,7 @@ namespace API.Migrations
             modelBuilder.Entity("API.Entities.Invoice.InvoiceItemEntity", b =>
                 {
                     b.HasOne("API.Entities.Invoice.InvoiceEntity", "Invoice")
-                        .WithMany()
+                        .WithMany("InvoiceItems")
                         .HasForeignKey("InvoiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -656,6 +659,11 @@ namespace API.Migrations
             modelBuilder.Entity("API.Entities.Expense.ExpenseEntity", b =>
                 {
                     b.Navigation("ExpenseItems");
+                });
+
+            modelBuilder.Entity("API.Entities.Invoice.InvoiceEntity", b =>
+                {
+                    b.Navigation("InvoiceItems");
                 });
 
             modelBuilder.Entity("API.Entities.Item.ItemEntity", b =>

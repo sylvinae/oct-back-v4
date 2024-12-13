@@ -83,12 +83,15 @@ public class ItemController(
     }
 
     [Authorize(Roles = "admin")]
-    [HttpPost]
+    [HttpPost("restock")]
     public async Task<IActionResult> RestockItems([FromBody] List<CreateRestockItemModel> items)
     {
-        var (failed, restocked) = await rs.RestockItemsAsync(items);
-        if (restocked.Count == 0)
-            return BadRequest(new { failed });
-        return failed.Count != 0 ? Ok(new { failed, restocked }) : Ok(new { restocked });
+        var (failed, restocked, created) = await rs.RestockItemsAsync(items);
+        if (restocked.Count == items.Count)
+            return Ok(new { restocked });
+        if (created.Count == items.Count)
+            return Ok(new { created });
+        if (failed.Count == items.Count) return BadRequest(new { failed });
+        return Ok(new { failed, restocked, created });
     }
 }

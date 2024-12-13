@@ -47,5 +47,9 @@ public class ItemHistoryEntity
 
     public bool IsLow { get; set; }
     public bool IsExpired { get; set; }
+
+    [Column(TypeName = "timestamp without time zone")]
+    public DateTime? ActionTaken { get; set; } = DateTime.Now;
+
     [MaxLength(50)] public string Action { get; set; } = null!;
 }

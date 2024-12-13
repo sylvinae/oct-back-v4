@@ -264,6 +264,7 @@ namespace API.Migrations
                     Hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     IsLow = table.Column<bool>(type: "boolean", nullable: false),
                     IsExpired = table.Column<bool>(type: "boolean", nullable: false),
+                    ActionTaken = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     Action = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>

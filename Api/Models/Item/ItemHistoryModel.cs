@@ -1,61 +1,38 @@
-using Newtonsoft.Json;
-
 namespace API.Models.Item;
 
 public class BaseItemHistoryModel
 {
-    [JsonProperty("itemId")] public Guid ItemId { get; set; }
-
-    [JsonProperty("userId")] public Guid UserId { get; set; }
-
-    [JsonProperty("barcode")] public string? Barcode { get; set; }
-
-    [JsonProperty("brand")] public string? Brand { get; set; }
-
-    [JsonProperty("generic")] public string? Generic { get; set; }
-
-    [JsonProperty("classification")] public string? Classification { get; set; }
-
-    [JsonProperty("formulation")] public string? Formulation { get; set; }
-
-    [JsonProperty("location")] public string? Location { get; set; }
-
-    [JsonProperty("company")] public string? Company { get; set; }
-
-    [JsonProperty("wholesale")] public decimal Wholesale { get; set; }
-
-    [JsonProperty("retail")] public decimal Retail { get; set; }
-
-    [JsonProperty("stock")] public int Stock { get; set; }
-
-    [JsonProperty("lowThreshold")] public int LowThreshold { get; set; }
-
-    [JsonProperty("isLow")] public bool IsLow { get; set; }
-
-    [JsonProperty("isReagent")] public bool IsReagent { get; set; }
-
-    [JsonProperty("usesLeft")] public int? UsesLeft { get; set; }
-
-    [JsonProperty("usesMax")] public int? UsesMax { get; set; }
-
-    [JsonProperty("hasExpiry")] public bool HasExpiry { get; set; }
-
-    [JsonProperty("expiry")] public DateTime? Expiry { get; set; }
-
-    [JsonProperty("isExpired")] public bool IsExpired { get; set; }
-
-    [JsonProperty("isDeleted")] public bool IsDeleted { get; set; }
-
-    [JsonProperty("hash")] public string Hash { get; set; } = null!;
-
-    [JsonProperty("action")] public string? Action { get; set; }
+    public Guid ItemId { get; set; }
+    public Guid UserId { get; set; }
+    public string? Barcode { get; set; }
+    public string? Brand { get; set; }
+    public string? Generic { get; set; }
+    public string? Classification { get; set; }
+    public string? Formulation { get; set; }
+    public string? Location { get; set; }
+    public string? Company { get; set; }
+    public decimal Wholesale { get; set; }
+    public decimal Retail { get; set; }
+    public int Stock { get; set; }
+    public int LowThreshold { get; set; }
+    public bool IsLow { get; set; }
+    public bool IsReagent { get; set; }
+    public int? UsesLeft { get; set; }
+    public int? UsesMax { get; set; }
+    public bool HasExpiry { get; set; }
+    public DateTime? Expiry { get; set; }
+    public bool IsExpired { get; set; }
+    public bool IsDeleted { get; set; }
+    public string Hash { get; set; } = null!;
+    public string? Action { get; set; }
 }
 
 public class AddItemHistoryModel : BaseItemHistoryModel;
 
 public class ResponseItemHistoryModel : BaseItemHistoryModel
 {
-    [JsonProperty("id")] public Guid Id { get; set; }
+    public Guid Id { get; set; }
+    public DateTime ActionTaken { get; set; }
 }
 
 public enum ActionType

@@ -1,51 +1,40 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Newtonsoft.Json;
 
 namespace API.Models.Invoice;
 
 public class BaseInvoiceModel
 {
-    [JsonProperty("userId")] public Guid? UserId { get; set; }
+    public Guid? UserId { get; set; }
 
-    [JsonProperty("invoiceDate")]
     [Column(TypeName = "timestamp without time zone")]
     public DateTime InvoiceDate { get; set; }
 
-    [JsonProperty("amountTendered")] public decimal AmountTendered { get; set; }
-
-    [JsonProperty("totalPrice")] public decimal TotalPrice { get; set; }
-
-    [JsonProperty("totalDiscountedPrice")] public decimal? TotalDiscountedPrice { get; set; }
-
-    [JsonProperty("isVoided")] public bool? IsVoided { get; set; }
-
-    [JsonProperty("voidReason")] public string? VoidReason { get; set; }
+    public decimal AmountTendered { get; set; }
+    public decimal TotalPrice { get; set; }
+    public decimal? TotalDiscountedPrice { get; set; }
+    public bool? IsVoided { get; set; }
+    public string? VoidReason { get; set; }
 }
 
 public class ResponseInvoiceModel : BaseInvoiceModel
 {
-    [JsonProperty("id")] public Guid Id { get; set; }
-
-    [JsonProperty("invoiceItems")] public ICollection<InvoiceItemModel>? InvoiceItems { get; set; } = [];
+    public Guid Id { get; set; }
+    public ICollection<InvoiceItemModel>? InvoiceItems { get; set; } = [];
 }
 
 public class FailedResponseInvoiceModel : BaseInvoiceModel
 {
-    [JsonProperty("error")] public string? Error { get; set; }
+    public string? Error { get; set; }
 }
 
 public class CreateInvoiceModel : BaseInvoiceModel
 {
-    [JsonProperty("invoiceItems")] public ICollection<InvoiceItemModel> InvoiceItems { get; set; } = [];
+    public ICollection<InvoiceItemModel> InvoiceItems { get; set; } = [];
 }
 
 public class VoidInvoiceModel
 {
-    [JsonProperty("id")] [Required] public Guid Id { get; set; }
-
-    [JsonProperty("voidReason")]
-    [Required]
-    [MaxLength(500)]
-    public string VoidReason { get; set; } = string.Empty;
+    [Required] public Guid Id { get; set; }
+    [Required] [MaxLength(500)] public string VoidReason { get; set; } = string.Empty;
 }
