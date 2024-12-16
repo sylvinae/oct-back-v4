@@ -1,6 +1,6 @@
 using API.Entities.Invoice;
-using API.Interfaces.Invoice;
 using API.Models.Invoice;
+using API.Services.Invoice.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;

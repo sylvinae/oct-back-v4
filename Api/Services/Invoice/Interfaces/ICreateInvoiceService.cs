@@ -1,6 +1,6 @@
 using API.Models.Invoice;
 
-namespace API.Interfaces.Invoice;
+namespace API.Services.Invoice.Interfaces;
 
 public interface ICreateInvoiceService
 {

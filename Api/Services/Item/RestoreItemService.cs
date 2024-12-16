@@ -1,7 +1,6 @@
 using API.Db;
-using API.Interfaces;
-using API.Interfaces.Item;
 using API.Models.Item;
+using API.Services.Item.Interfaces;
 using API.Utils;
 
 namespace API.Services.Item;
@@ -12,48 +11,36 @@ public class RestoreItemService(
     IItemHistoryService ih
 ) : IRestoreItemService
 {
-    public async Task<(List<Guid> failed, List<Guid> restored)> RestoreItems(List<Guid> itemIds)
+    public async Task<bool> RestoreItems(List<Guid> itemIds)
     {
-        var (failed, restored) = (new List<Guid>(), new List<Guid>());
-
         if (itemIds.Count == 0)
         {
-            log.LogInformation("No items to delete.");
-            return (failed, restored);
+            log.LogInformation("No items to Restore.");
+            return false;
         }
 
-        restored = await ProcessRestoration(itemIds);
-
-        return (failed, restored);
-    }
-
-    private async Task<List<Guid>> ProcessRestoration(List<Guid> itemIds)
-    {
-        var restored = new List<Guid>();
-
-        foreach (var id in itemIds)
+        var items = db.Items.Where(item => itemIds.Contains(item.Id)).ToList();
+        var toAdd = new List<AddItemHistoryModel>();
+        if (items.Count == 0)
+            return false;
+        foreach (var item in items)
         {
-            var item = await db.Items.FindAsync(id);
-            if (item == null)
-            {
-                log.LogWarning("Item with ID {ItemId} not found.", id);
-                continue;
-            }
-
-            item.IsDeleted = true;
-            restored.Add(id);
-
-            await ih.AddItemHistory(
+            item.IsDeleted = false;
+            var hash = Cryptics.ComputeHash(item);
+            toAdd.Add(
                 PropCopier.Copy(
                     item,
-                    new AddItemHistoryModel { ItemId = item.Id, Hash = item.Hash }
-                ),
-                ActionType.Restored
+                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash }
+                )
             );
         }
 
-        await db.SaveChangesAsync();
+        var result = await ih.AddItemHistoryRange(toAdd, ActionType.Restored);
+        if (!result)
+            return false;
 
-        return restored;
+        await db.SaveChangesAsync();
+        log.LogInformation("Restoration completed.");
+        return true;
     }
 }

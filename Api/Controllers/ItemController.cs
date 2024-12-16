@@ -1,6 +1,6 @@
 using API.Entities.Item;
-using API.Interfaces.Item;
 using API.Models.Item;
+using API.Services.Item.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;

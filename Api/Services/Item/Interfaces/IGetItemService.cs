@@ -1,6 +1,6 @@
 using API.Entities.Item;
 
-namespace API.Interfaces.Item;
+namespace API.Services.Item.Interfaces;
 
 public interface IGetItemService
 {

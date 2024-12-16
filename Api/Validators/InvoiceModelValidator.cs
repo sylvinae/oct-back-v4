@@ -9,9 +9,9 @@ public class BaseInvoiceModelValidator : AbstractValidator<BaseInvoiceModel>
     {
         RuleFor(x => x.InvoiceDate)
             .NotEmpty()
-            .WithMessage("Invoice date is required.")
+            .WithMessage("Interfaces date is required.")
             .Must(invoiceDate => BeTodayOrFutureDate(invoiceDate))
-            .WithMessage("Invoice date must be in the future or today.");
+            .WithMessage("Interfaces date must be in the future or today.");
 
         RuleFor(x => x.AmountTendered)
             .GreaterThanOrEqualTo(0)
@@ -45,9 +45,9 @@ public class CreateInvoiceModelValidator : AbstractValidator<CreateInvoiceModel>
 
         RuleFor(x => x.InvoiceItems)
             .NotEmpty()
-            .WithMessage("Invoice items are required.")
+            .WithMessage("Interfaces items are required.")
             .Must(items => items.Count > 0)
-            .WithMessage("At least one Invoice item is required.");
+            .WithMessage("At least one Interfaces item is required.");
     }
 }
 
@@ -55,7 +55,7 @@ public class VoidInvoiceModelValidator : AbstractValidator<VoidInvoiceModel>
 {
     public VoidInvoiceModelValidator()
     {
-        RuleFor(x => x.Id).NotEmpty().WithMessage("Invoice ID is required.");
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Interfaces ID is required.");
 
         RuleFor(x => x.VoidReason)
             .NotEmpty()

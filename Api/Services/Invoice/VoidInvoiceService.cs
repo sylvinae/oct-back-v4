@@ -1,8 +1,8 @@
 using API.Db;
-using API.Interfaces;
-using API.Interfaces.Invoice;
 using API.Models.Invoice;
 using API.Models.Item;
+using API.Services.Invoice.Interfaces;
+using API.Services.Item.Interfaces;
 using API.Utils;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,7 +18,7 @@ public class VoidInvoiceService(
     {
         try
         {
-            log.LogInformation("Void Invoice called.");
+            log.LogInformation("Void Interfaces called.");
             var invoiceItem =
                 await db.Invoices.Include(i => i.InvoiceItems).FirstOrDefaultAsync(i => i.Id == invoice.Id);
 
@@ -60,7 +60,7 @@ public class VoidInvoiceService(
             var item = await db.Items.FindAsync(itemId);
             if (item == null)
             {
-                log.LogWarning("Item {x} not found.", itemId);
+                log.LogWarning("Interfaces {x} not found.", itemId);
                 return false;
             }
 

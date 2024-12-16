@@ -1,10 +1,10 @@
 using API.Db;
 using API.Entities.Invoice;
 using API.Entities.User;
-using API.Interfaces;
-using API.Interfaces.Invoice;
 using API.Models.Invoice;
 using API.Models.Item;
+using API.Services.Invoice.Interfaces;
+using API.Services.Item.Interfaces;
 using API.Utils;
 using API.Validators;
 using FluentValidation;
@@ -81,7 +81,7 @@ public class CreateInvoiceService(
             var item = await db.Items.FindAsync(itemId);
             if (item == null)
             {
-                log.LogWarning("Item {x} not found.", itemId);
+                log.LogWarning("Interfaces {x} not found.", itemId);
                 return false;
             }
 

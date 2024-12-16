@@ -1,8 +1,8 @@
 using API.Db;
-using API.Interfaces;
-using API.Interfaces.Item;
 using API.Models.Item;
+using API.Services.Item.Interfaces;
 using API.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Services.Item;
 
@@ -12,48 +12,36 @@ public class DeleteItemService(
     IItemHistoryService ih
 ) : IDeleteItemService
 {
-    public async Task<(List<Guid> failed, List<Guid> deleted)> DeleteItems(List<Guid> itemIds)
+    public async Task<bool> DeleteItems(List<Guid> itemIds)
     {
-        var (failed, deleted) = (new List<Guid>(), new List<Guid>());
-
         if (itemIds.Count == 0)
         {
             log.LogInformation("No items to delete.");
-            return (failed, deleted);
+            return false;
         }
 
-        deleted = await ProcessDeletion(itemIds);
-
-        return (failed, deleted);
-    }
-
-    private async Task<List<Guid>> ProcessDeletion(List<Guid> itemIds)
-    {
-        var deleted = new List<Guid>();
-
-        foreach (var id in itemIds)
+        var items = await db.Items.Where(item => itemIds.Contains(item.Id)).ToListAsync();
+        var toAdd = new List<AddItemHistoryModel>();
+        if (items.Count == 0)
+            return false;
+        foreach (var item in items)
         {
-            var item = await db.Items.FindAsync(id);
-            if (item == null)
-            {
-                log.LogWarning("Item with ID {ItemId} not found.", id);
-                continue;
-            }
-
             item.IsDeleted = true;
-            deleted.Add(id);
-
-            await ih.AddItemHistory(
+            var hash = Cryptics.ComputeHash(item);
+            toAdd.Add(
                 PropCopier.Copy(
                     item,
-                    new AddItemHistoryModel { ItemId = item.Id, Hash = item.Hash }
-                ),
-                ActionType.Deleted
+                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash }
+                )
             );
         }
 
-        await db.SaveChangesAsync();
+        var result = await ih.AddItemHistoryRange(toAdd, ActionType.Deleted);
+        if (!result)
+            return false;
 
-        return deleted;
+        await db.SaveChangesAsync();
+        log.LogInformation("Deletion completed.");
+        return true;
     }
 }

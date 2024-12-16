@@ -7,27 +7,21 @@ namespace API.Entities.Invoice;
 
 public class InvoiceItemEntity
 {
-    [Key]
-    public Guid Id { get; set; } = Guid.NewGuid();
+    [Key] public Guid Id { get; set; } = Guid.NewGuid();
 
-    [Required]
-    public Guid InvoiceId { get; set; }
+    [Required] public Guid InvoiceId { get; set; }
 
-    [ForeignKey("InvoiceId")]
-    public InvoiceEntity Invoice { get; set; } = null!;
+    [ForeignKey("InvoiceId")] public InvoiceEntity Invoice { get; set; } = null!;
 
-    [Required]
-    public Guid ItemId { get; set; }
+    [Required] public Guid ItemId { get; set; }
 
-    [ForeignKey("ItemId")]
-    public ItemEntity Item { get; set; } = null!;
+    [ForeignKey("ItemId")] public ItemEntity Item { get; set; } = null!;
 
-    // Item details at purchase
+    // Interfaces details at purchase
     public int? ItemsSold { get; set; }
     public int? UsesConsumed { get; set; }
 
-    [Required]
-    [Precision(18, 2)]
-    public decimal ItemPrice { get; set; }
+    [Required] [Precision(18, 2)] public decimal ItemPrice { get; set; }
+
     public decimal? DiscountedPrice { get; set; }
 }
