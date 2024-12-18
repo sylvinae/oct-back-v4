@@ -1,6 +1,6 @@
 using API.Db;
 using API.Entities.Item;
-using API.Interfaces.Item;
+using API.Services.Item.Interfaces;
 
 namespace API.Services.Item;
 

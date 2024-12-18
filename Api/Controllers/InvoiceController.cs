@@ -1,6 +1,6 @@
 using API.Entities.Invoice;
-using API.Interfaces.Invoice;
 using API.Models.Invoice;
+using API.Services.Invoice.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -27,11 +27,9 @@ public class InvoiceController(
     [HttpPost]
     public async Task<IActionResult> CreateInvoice([FromBody] CreateInvoiceModel invoiceModel)
     {
-        var (failed, created) = await createInvoiceService.CreateInvoice(invoiceModel);
-        if (created == null)
-            return BadRequest(new { failed });
+        var (ok, fail) = await createInvoiceService.CreateInvoice(invoiceModel);
 
-        return CreatedAtAction(nameof(CreateInvoice), new { id = created.Id }, new { created });
+        return ok ? Ok() : BadRequest(new { status = "fail", fail!.Errors });
     }
 
     [Authorize(Roles = "admin,cashier")]

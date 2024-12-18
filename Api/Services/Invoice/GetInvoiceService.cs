@@ -1,6 +1,6 @@
 using API.Db;
 using API.Entities.Invoice;
-using API.Interfaces.Invoice;
+using API.Services.Invoice.Interfaces;
 
 namespace API.Services.Invoice;
 

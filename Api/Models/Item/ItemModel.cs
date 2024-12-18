@@ -37,8 +37,3 @@ public class ResponseItemModel : BaseItemModel
     public bool IsDeleted { get; set; }
     public ICollection<ResponseItemHistoryModel>? ItemHistory { get; set; } = [];
 }
-
-public class FailedResponseItemModel : ResponseItemModel
-{
-    public string Error { get; set; } = null!;
-}

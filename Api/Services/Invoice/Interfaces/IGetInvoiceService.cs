@@ -1,6 +1,6 @@
 using API.Entities.Invoice;
 
-namespace API.Interfaces.Invoice;
+namespace API.Services.Invoice.Interfaces;
 
 public interface IGetInvoiceService
 {
