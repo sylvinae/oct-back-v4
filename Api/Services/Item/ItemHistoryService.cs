@@ -5,7 +5,6 @@ using API.Models.Item;
 using API.Services.Item.Interfaces;
 using API.Utils;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace API.Services.Item;
 
@@ -16,22 +15,15 @@ public class ItemHistoryService(
     IHttpContextAccessor httpContextAccessor
 ) : IItemHistoryService
 {
-    public async Task<bool> AddItemHistory(AddItemHistoryModel itemHistory, ActionType action)
+    public async Task<bool> AddItemHistory(AddItemHistoryModel itemHistory)
     {
         try
         {
-            var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext!.User);
+            var entities = CreateItemHistoryEntities(new List<AddItemHistoryModel> { itemHistory });
 
-            var itemHistoryEntity = PropCopier.Copy(
-                itemHistory,
-                new ItemHistoryEntity { ItemId = itemHistory.ItemId, UserId = user!.Id }
-            );
-            itemHistoryEntity.Action = action.ToString();
-            await db.ItemHistories.AddAsync(itemHistoryEntity);
+            await db.ItemHistories.AddAsync(entities.First());
             log.LogInformation(
-                "Added {action} history to item {id}",
-                action.ToString(),
-                itemHistory.ItemId
+                "Added {action} history to item {id}", itemHistory.Action, itemHistory.ItemId
             );
 
             return true;
@@ -43,28 +35,39 @@ public class ItemHistoryService(
         }
     }
 
-    public async Task<List<ResponseItemHistoryModel>> GetItemHistory(Guid itemId)
-    {
-        var result = await db.ItemHistories.Where(ih => ih.ItemId == itemId).ToListAsync();
-        return result.Select(item => PropCopier.Copy(item, new ResponseItemHistoryModel())).ToList();
-    }
-
-    public async Task<bool> AddItemHistoryRange(List<AddItemHistoryModel> itemHistory, ActionType action)
+    public async Task<bool> AddItemHistoryRange(List<AddItemHistoryModel> itemHistory)
     {
         try
         {
-            var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext!.User);
-            var entities = itemHistory.Select(item => PropCopier.Copy(itemHistory,
-                new ItemHistoryEntity
-                    { ItemId = item.ItemId, UserId = user!.Id, Action = action.ToString() })).ToList();
+            var entities = CreateItemHistoryEntities(itemHistory);
 
             await db.ItemHistories.AddRangeAsync(entities);
+            log.LogInformation("Added item history for {count} items.", itemHistory.Count);
+
             return true;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
+            log.LogError("Error adding item history range. {x}", ex);
             return false;
         }
+    }
+
+    private List<ItemHistoryEntity> CreateItemHistoryEntities(List<AddItemHistoryModel> itemHistory)
+    {
+        var user = userManager.GetUserAsync(httpContextAccessor.HttpContext!.User).Result;
+
+        return itemHistory.Select(item =>
+        {
+            var entity = new ItemHistoryEntity
+            {
+                ItemId = item.ItemId,
+                UserId = user!.Id,
+                Hash = item.Hash,
+                Action = item.Action!
+            };
+
+            return PropCopier.Copy(item, entity);
+        }).ToList();
     }
 }

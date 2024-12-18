@@ -1,5 +1,6 @@
 using API.Db;
 using API.Entities.Item;
+using API.Models;
 using API.Models.Item;
 using API.Services.Item.Interfaces;
 using API.Utils;
@@ -14,15 +15,18 @@ public class RestockItemService(
     IItemHistoryService ih) : IRestockItemService
 {
     public async
-        Task<bool>
+        Task<(List<ResponseItemModel>ok, List<BulkFailure<CreateRestockItemModel>>fails)>
         RestockItemsAsync(
             List<CreateRestockItemModel> restockItems)
     {
         log.LogInformation("Restocking items...");
 
         var toCreate = new List<ItemEntity>();
-        var toAddCreate = new List<AddItemHistoryModel>();
-        var toAddRestock = new List<AddItemHistoryModel>();
+        var toAddHistory = new List<AddItemHistoryModel>();
+
+        var fails = new List<BulkFailure<CreateRestockItemModel>>();
+        var ok = new List<ResponseItemModel>();
+
         var existingHashes = new HashSet<string>(restockItems.Select(Cryptics.ComputeHash).ToList());
         var existingItems = db.Items
             .Where(i => existingHashes.Contains(i.Hash))
@@ -30,19 +34,27 @@ public class RestockItemService(
 
         foreach (var item in restockItems)
         {
-            var result = await createValidator.ValidateAsync(item);
-            if (!result.IsValid)
-                return false;
+            var isValid = await createValidator.ValidateAsync(item);
+            if (!isValid.IsValid)
+            {
+                fails.Add(new BulkFailure<CreateRestockItemModel>
+                {
+                    Input = item,
+                    Errors = isValid.Errors.ToDictionary(e => e.PropertyName, e => e.ErrorMessage)
+                });
+                continue;
+            }
 
             var hash = Cryptics.ComputeHash(item);
             var existingItem = existingItems.FirstOrDefault(i => i.Hash == hash);
             if (existingItem == null)
             {
-                log.LogInformation("New item detected. Creating {x}, {y}...", item.Brand, item.Generic);
+                log.LogInformation("New item detected. Will create {x}, {y}...", item.Brand, item.Generic);
                 var newItem = PropCopier.Copy(item,
                     new ItemEntity { Hash = hash, IsLow = item.Stock <= item.LowThreshold });
                 toCreate.Add(newItem);
-                toAddCreate.Add(PropCopier.Copy(item, new AddItemHistoryModel
+                ok.Add(PropCopier.Copy(newItem, new ResponseItemModel()));
+                toAddHistory.Add(PropCopier.Copy(item, new AddItemHistoryModel
                 {
                     ItemId = newItem.Id, Hash = hash, Action = ActionType.Created.ToString()
                 }));
@@ -51,19 +63,20 @@ public class RestockItemService(
             {
                 log.LogInformation("Restocking {x}...", existingItem.Id);
                 existingItem.Stock += item.Stock;
-                toAddRestock.Add(PropCopier.Copy(item,
+                item.Stock = existingItem.Stock;
+                ok.Add(PropCopier.Copy(existingItem, new ResponseItemModel()));
+                toAddHistory.Add(PropCopier.Copy(item,
                     new AddItemHistoryModel { ItemId = existingItem.Id, Action = ActionType.Restored.ToString() }));
             }
         }
 
         var addItemsTask = db.Items.AddRangeAsync(toCreate);
-        var addCreatedHistoryTask = ih.AddItemHistoryRange(toAddCreate, ActionType.Created);
-        var addRestockHistoryTask = ih.AddItemHistoryRange(toAddRestock, ActionType.Restocked);
+        var addCreatedHistoryTask = ih.AddItemHistoryRange(toAddHistory);
 
-        await Task.WhenAll(addItemsTask, addCreatedHistoryTask, addRestockHistoryTask);
+        await Task.WhenAll(addItemsTask, addCreatedHistoryTask);
 
         await db.SaveChangesAsync();
-        log.LogInformation("Restocked {x} items. Added {y} items.", toAddRestock.Count, toAddCreate.Count);
-        return true;
+        log.LogInformation("Restocked {x} items. Added {y} items.", toAddHistory.Count, toAddHistory.Count);
+        return (ok, fails);
     }
 }

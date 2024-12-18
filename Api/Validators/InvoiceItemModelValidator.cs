@@ -27,5 +27,9 @@ public class InvoiceItemModelValidator : AbstractValidator<InvoiceItemModel>
             .GreaterThanOrEqualTo(0)
             .When(x => x.DiscountedPrice.HasValue)
             .WithMessage("DiscountedPrice must be non-negative if specified.");
+
+        RuleFor(x => x.IsReagent)
+            .Must(x => x || x == false)
+            .WithMessage("IsReagent must be true, false.");
     }
 }

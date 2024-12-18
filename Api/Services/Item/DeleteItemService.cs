@@ -1,4 +1,5 @@
 using API.Db;
+using API.Models;
 using API.Models.Item;
 using API.Services.Item.Interfaces;
 using API.Utils;
@@ -12,23 +13,46 @@ public class DeleteItemService(
     IItemHistoryService ih
 ) : IDeleteItemService
 {
-    public async Task<bool> DeleteItems(List<Guid> itemIds)
+    public async Task<(List<Guid> ok, List<BulkFailure<Guid>> fails)> DeleteItems(List<Guid> itemIds)
     {
-        if (itemIds.Count == 0)
-        {
-            log.LogInformation("No items to delete.");
-            return false;
-        }
+        log.LogInformation("Processing deletion of {Count} items.", itemIds.Count);
 
         var items = await db.Items.Where(item => itemIds.Contains(item.Id)).ToListAsync();
-        var toAdd = new List<AddItemHistoryModel>();
-        if (items.Count == 0)
-            return false;
-        foreach (var item in items)
+        var existingItemIds = items.Select(item => item.Id).ToHashSet();
+
+        var ok = new List<Guid>();
+        var fails = new List<BulkFailure<Guid>>();
+        var toAddHistory = new List<AddItemHistoryModel>();
+
+        foreach (var id in itemIds)
         {
+            if (!existingItemIds.Contains(id))
+            {
+                fails.Add(new BulkFailure<Guid>
+                {
+                    Input = id,
+                    Errors = new Dictionary<string, string> { { "id", "Item not found." } }
+                });
+                continue;
+            }
+
+            var item = items.First(i => i.Id == id);
+
+            if (item.IsDeleted)
+            {
+                fails.Add(new BulkFailure<Guid>
+                {
+                    Input = id,
+                    Errors = new Dictionary<string, string> { { "id", "Item is already deleted." } }
+                });
+                continue;
+            }
+
             item.IsDeleted = true;
+            ok.Add(item.Id);
+
             var hash = Cryptics.ComputeHash(item);
-            toAdd.Add(
+            toAddHistory.Add(
                 PropCopier.Copy(
                     item,
                     new AddItemHistoryModel { ItemId = item.Id, Hash = hash }
@@ -36,12 +60,18 @@ public class DeleteItemService(
             );
         }
 
-        var result = await ih.AddItemHistoryRange(toAdd, ActionType.Deleted);
+
+        if (ok.Count <= 0) return (ok, fails);
+        var result = await ih.AddItemHistoryRange(toAddHistory);
         if (!result)
-            return false;
+        {
+            log.LogError("Failed to add deletion history.");
+            throw new Exception("History addition failed.");
+        }
 
         await db.SaveChangesAsync();
-        log.LogInformation("Deletion completed.");
-        return true;
+        log.LogInformation("Deletion completed. {Count} items deleted.", ok.Count);
+
+        return (ok, fails);
     }
 }

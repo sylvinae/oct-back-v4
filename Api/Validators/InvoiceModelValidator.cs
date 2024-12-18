@@ -48,6 +48,8 @@ public class CreateInvoiceModelValidator : AbstractValidator<CreateInvoiceModel>
             .WithMessage("Interfaces items are required.")
             .Must(items => items.Count > 0)
             .WithMessage("At least one Interfaces item is required.");
+
+        RuleForEach(x => x.InvoiceItems).SetValidator(new InvoiceItemModelValidator());
     }
 }
 

@@ -68,7 +68,7 @@ namespace API.Migrations
                     b.ToTable("ExpenseItemEntities");
                 });
 
-            modelBuilder.Entity("API.Entities.Interfaces.InvoiceEntity", b =>
+            modelBuilder.Entity("API.Entities.Invoice.InvoiceEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -106,7 +106,7 @@ namespace API.Migrations
                     b.ToTable("Invoices");
                 });
 
-            modelBuilder.Entity("API.Entities.Interfaces.InvoiceItemEntity", b =>
+            modelBuilder.Entity("API.Entities.Invoice.InvoiceItemEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -140,7 +140,7 @@ namespace API.Migrations
                     b.ToTable("InvoiceItems");
                 });
 
-            modelBuilder.Entity("API.Entities.Interfaces.ItemEntity", b =>
+            modelBuilder.Entity("API.Entities.Item.ItemEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -222,7 +222,7 @@ namespace API.Migrations
                     b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("API.Entities.Interfaces.ItemHistoryEntity", b =>
+            modelBuilder.Entity("API.Entities.Item.ItemHistoryEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -556,7 +556,7 @@ namespace API.Migrations
                     b.Navigation("Expense");
                 });
 
-            modelBuilder.Entity("API.Entities.Interfaces.InvoiceEntity", b =>
+            modelBuilder.Entity("API.Entities.Invoice.InvoiceEntity", b =>
                 {
                     b.HasOne("API.Entities.User.UserEntity", "User")
                         .WithMany("Invoices")
@@ -567,28 +567,28 @@ namespace API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("API.Entities.Interfaces.InvoiceItemEntity", b =>
+            modelBuilder.Entity("API.Entities.Invoice.InvoiceItemEntity", b =>
                 {
-                    b.HasOne("API.Entities.Interfaces.InvoiceEntity", "Interfaces")
+                    b.HasOne("API.Entities.Invoice.InvoiceEntity", "Invoice")
                         .WithMany("InvoiceItems")
                         .HasForeignKey("InvoiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Interfaces.ItemEntity", "Interfaces")
+                    b.HasOne("API.Entities.Item.ItemEntity", "Item")
                         .WithMany("InvoiceItems")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Interfaces");
+                    b.Navigation("Invoice");
 
-                    b.Navigation("Interfaces");
+                    b.Navigation("Item");
                 });
 
-            modelBuilder.Entity("API.Entities.Interfaces.ItemHistoryEntity", b =>
+            modelBuilder.Entity("API.Entities.Item.ItemHistoryEntity", b =>
                 {
-                    b.HasOne("API.Entities.Interfaces.ItemEntity", "Interfaces")
+                    b.HasOne("API.Entities.Item.ItemEntity", "Item")
                         .WithMany("ItemHistory")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -600,7 +600,7 @@ namespace API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Interfaces");
+                    b.Navigation("Item");
 
                     b.Navigation("User");
                 });
@@ -661,12 +661,12 @@ namespace API.Migrations
                     b.Navigation("ExpenseItems");
                 });
 
-            modelBuilder.Entity("API.Entities.Interfaces.InvoiceEntity", b =>
+            modelBuilder.Entity("API.Entities.Invoice.InvoiceEntity", b =>
                 {
                     b.Navigation("InvoiceItems");
                 });
 
-            modelBuilder.Entity("API.Entities.Interfaces.ItemEntity", b =>
+            modelBuilder.Entity("API.Entities.Item.ItemEntity", b =>
                 {
                     b.Navigation("InvoiceItems");
 

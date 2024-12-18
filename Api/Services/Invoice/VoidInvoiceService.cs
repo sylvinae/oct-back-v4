@@ -83,8 +83,8 @@ public class VoidInvoiceService(
 
             log.LogInformation("Adding {x} history to {y}", action, item);
             await ih.AddItemHistory(
-                PropCopier.Copy(item, new AddItemHistoryModel { ItemId = item.Id }),
-                action
+                PropCopier.Copy(item,
+                    new AddItemHistoryModel { ItemId = item.Id, Action = ActionType.Voided.ToString() })
             );
 
             return true;

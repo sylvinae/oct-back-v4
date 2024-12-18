@@ -15,8 +15,7 @@ public class ItemController(
     IUpdateItemService u,
     IDeleteItemService d,
     IRestoreItemService re,
-    IRestockItemService rs
-) : ControllerBase
+    IRestockItemService rs) : ControllerBase
 {
     [HttpGet]
     [EnableQuery]
@@ -29,69 +28,88 @@ public class ItemController(
     [HttpPost]
     public async Task<IActionResult> CreateItems([FromBody] List<CreateItemModel> items)
     {
-        var (failed, created) = await c.CreateItems(items);
+        if (items.Count == 0)
+            return BadRequest(new { status = "error" });
 
-        if (created.Count == 0)
-            return BadRequest(new { failed });
-        if (failed.Count != 0)
-            return Ok(new { failed, created });
+        var (ok, fails) = await c.CreateItems(items);
 
-        return CreatedAtAction(
-            nameof(CreateItems),
-            new { id = created.First().Id },
-            new { created }
-        );
+        if (ok.Count == 0 && fails.Count > 0)
+            return BadRequest(new { status = "fail", data = new { fails } });
+
+        if (ok.Count != 0 && fails.Count > 0)
+            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
+
+        return Ok(new { status = "success", data = ok });
     }
 
     [Authorize(Roles = "admin")]
     [HttpPut]
     public async Task<IActionResult> UpdateItems([FromBody] List<UpdateItemModel> items)
     {
-        var (failed, updated) = await u.UpdateItems(items);
-        if (updated.Count == 0)
-            return BadRequest(new { failed });
-        if (failed.Count != 0)
-            return BadRequest(new { failed, updated });
+        if (items.Count == 0)
+            return BadRequest(new { status = "fail" });
 
-        return Ok(new { updated });
+        var (ok, fails) = await u.UpdateItems(items);
+
+        if (ok.Count == 0 && fails.Count > 0)
+            return BadRequest(new { status = "fail", errors = fails });
+
+        if (ok.Count != 0 && fails.Count > 0)
+            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
+
+        return Ok(new { status = "success", data = ok });
     }
 
     [Authorize(Roles = "admin")]
     [HttpDelete]
     public async Task<IActionResult> DeleteItems([FromBody] List<Guid> ids)
     {
-        var (failed, deleted) = await d.DeleteItems(ids);
-        if (deleted.Count == 0)
-            return BadRequest(new { failed });
-        if (failed.Count != 0)
-            return BadRequest(new { failed });
+        if (ids.Count == 0)
+            return BadRequest(new { status = "fail" });
 
-        return Ok(new { deleted });
+        var (ok, fails) = await d.DeleteItems(ids);
+
+        if (ok.Count == 0 && fails.Count > 0)
+            return BadRequest(new { status = "fail", errors = fails });
+
+        if (ok.Count != 0 && fails.Count > 0)
+            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
+
+        return Ok(new { status = "success", data = ok });
     }
 
     [Authorize(Roles = "admin")]
     [HttpPut("restore")]
     public async Task<IActionResult> RestoreItems([FromBody] List<Guid> ids)
     {
-        var (failed, restored) = await re.RestoreItems(ids);
-        if (restored.Count == 0)
-            return BadRequest(new { failed });
-        if (failed.Count != 0)
-            return BadRequest(new { failed, restored });
+        if (ids.Count == 0)
+            return BadRequest(new { status = "fail" });
 
-        return Ok(new { restored });
+        var (ok, fails) = await re.RestoreItems(ids);
+        if (ok.Count == 0 && fails.Count > 0)
+            return BadRequest(new { status = "fail", errors = fails });
+
+        if (ok.Count != 0 && fails.Count > 0)
+            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
+
+        return Ok(new { status = "success", data = ok });
     }
 
     [Authorize(Roles = "admin")]
     [HttpPost("restock")]
     public async Task<IActionResult> RestockItems([FromBody] List<CreateRestockItemModel> items)
     {
-        var (failed, restocked, created) = await rs.RestockItemsAsync(items);
-        if (restocked.Count == items.Count)
-            return Ok(new { restocked });
-        if (created.Count == items.Count)
-            return Ok(new { created });
-        if (failed.Count == items.Count) return BadRequest(new { failed });
-        return Ok(new { failed, restocked, created });
+        if (items.Count == 0)
+            return BadRequest(new { status = "fail" });
+
+        var (ok, fails) = await rs.RestockItemsAsync(items);
+
+        if (ok.Count == 0 && fails.Count > 0)
+            return BadRequest(new { status = "fail", errors = fails });
+
+        if (ok.Count != 0 && fails.Count > 0)
+            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
+
+        return Ok(new { status = "success", data = ok });
     }
 }
