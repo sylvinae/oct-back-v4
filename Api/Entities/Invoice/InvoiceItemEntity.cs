@@ -17,7 +17,6 @@ public class InvoiceItemEntity
 
     [ForeignKey("ItemId")] public ItemEntity Item { get; set; } = null!;
 
-    // Interfaces details at purchase
     public int? ItemsSold { get; set; }
     public int? UsesConsumed { get; set; }
 

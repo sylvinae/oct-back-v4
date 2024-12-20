@@ -24,6 +24,7 @@ public class ItemController(
         return Ok(g.GetAllItems());
     }
 
+
     [Authorize(Roles = "admin")]
     [HttpPost]
     public async Task<IActionResult> CreateItems([FromBody] List<CreateItemModel> items)
