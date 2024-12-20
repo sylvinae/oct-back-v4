@@ -65,7 +65,7 @@ namespace API.Migrations
 
                     b.HasIndex("ExpenseId");
 
-                    b.ToTable("ExpenseItemEntities");
+                    b.ToTable("ExpenseItems");
                 });
 
             modelBuilder.Entity("API.Entities.Invoice.InvoiceEntity", b =>

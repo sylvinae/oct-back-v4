@@ -11,7 +11,7 @@ public class ExpenseItemEntity
 
     [ForeignKey("ExpenseId")] public ExpenseEntity Expense { get; set; } = null!;
 
-    [MaxLength(500)] public required string Details { get; set; }
+    [MaxLength(500)] [Required] public string Details { get; set; } = null!;
 
     public decimal Amount { get; set; }
 }

@@ -19,7 +19,7 @@ public class ItemHistoryService(
     {
         try
         {
-            var entities = CreateItemHistoryEntities(new List<AddItemHistoryModel> { itemHistory });
+            var entities = CreateItemHistoryEntities([itemHistory]);
 
             await db.ItemHistories.AddAsync(entities.First());
             log.LogInformation(

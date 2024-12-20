@@ -17,5 +17,5 @@ public class Context(DbContextOptions<Context> options)
     public DbSet<ItemEntity> Items { get; set; } = null!;
     public DbSet<ItemHistoryEntity> ItemHistories { get; set; } = null!;
     public DbSet<ExpenseEntity> Expenses { get; set; } = null!;
-    public DbSet<ExpenseItemEntity> ExpenseItemEntities { get; set; } = null!;
+    public DbSet<ExpenseItemEntity> ExpenseItems { get; set; } = null!;
 }

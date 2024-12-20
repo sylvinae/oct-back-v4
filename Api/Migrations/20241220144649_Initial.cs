@@ -285,7 +285,7 @@ namespace API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ExpenseItemEntities",
+                name: "ExpenseItems",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -295,9 +295,9 @@ namespace API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ExpenseItemEntities", x => x.Id);
+                    table.PrimaryKey("PK_ExpenseItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ExpenseItemEntities_Expenses_ExpenseId",
+                        name: "FK_ExpenseItems_Expenses_ExpenseId",
                         column: x => x.ExpenseId,
                         principalTable: "Expenses",
                         principalColumn: "Id",
@@ -371,8 +371,8 @@ namespace API.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ExpenseItemEntities_ExpenseId",
-                table: "ExpenseItemEntities",
+                name: "IX_ExpenseItems_ExpenseId",
+                table: "ExpenseItems",
                 column: "ExpenseId");
 
             migrationBuilder.CreateIndex(
@@ -425,7 +425,7 @@ namespace API.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "ExpenseItemEntities");
+                name: "ExpenseItems");
 
             migrationBuilder.DropTable(
                 name: "InvoiceItems");
