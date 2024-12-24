@@ -14,13 +14,12 @@ public class UpdateItemService(
     IValidator<UpdateItemModel> updateValidator
 ) : IUpdateItemService
 {
-    public async Task<(List<ResponseItemModel>ok, List<BulkFailure<UpdateItemModel>>fails
-        )> UpdateItems(
+    public async Task<List<BulkFailure<UpdateItemModel>>?
+    > UpdateItems(
         List<UpdateItemModel> items)
     {
         log.LogInformation("Updating items...");
         var toAddHistory = new List<AddItemHistoryModel>();
-        var ok = new List<ResponseItemModel>();
         var fails = new List<BulkFailure<UpdateItemModel>>();
 
         foreach (var item in items)
@@ -51,14 +50,14 @@ public class UpdateItemService(
             var hash = Cryptics.ComputeHash(item);
             existingItem.Hash = hash;
             db.Entry(existingItem).CurrentValues.SetValues(item);
-            ok.Add(PropCopier.Copy(existingItem, new ResponseItemModel()));
             toAddHistory.Add(PropCopier.Copy(existingItem, new AddItemHistoryModel { ItemId = existingItem.Id })
             );
         }
 
+        if (toAddHistory.Count == 0) return fails;
         await ih.AddItemHistoryRange(toAddHistory);
         await db.SaveChangesAsync();
         log.LogInformation("Updated {x} items.", items.Count);
-        return (ok, fails);
+        return fails;
     }
 }

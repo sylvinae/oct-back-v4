@@ -1,0 +1,18 @@
+meta {
+  name: Void Invoice
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:5127/api/invoices/void
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "4d8a8ce5-4f01-48ff-8a70-7c49b35ad664",
+    "voidReason": "nigga nigga"
+  }
+}

@@ -15,7 +15,7 @@ public class CreateItemService(
     IItemHistoryService ih
 ) : ICreateItemService
 {
-    public async Task<(List<ResponseItemModel>ok, List<BulkFailure<CreateItemModel>>fails)> CreateItems(
+    public async Task<List<BulkFailure<CreateItemModel>>?> CreateItems(
         List<CreateItemModel> items)
     {
         log.LogInformation("Creating items...");
@@ -23,7 +23,6 @@ public class CreateItemService(
         var toCreate = new List<ItemEntity>();
         var toAddHistory = new List<AddItemHistoryModel>();
         var fails = new List<BulkFailure<CreateItemModel>>();
-        var ok = new List<ResponseItemModel>();
 
         var itemHashes = items.Select(Cryptics.ComputeHash).ToHashSet();
         var existingHashes = db.Items
@@ -61,17 +60,16 @@ public class CreateItemService(
             var newItem = PropCopier.Copy(item,
                 new ItemEntity { Hash = hash, IsLow = item.Stock <= item.LowThreshold });
             toCreate.Add(newItem);
-            ok.Add(PropCopier.Copy(newItem, new ResponseItemModel()));
             toAddHistory.Add(PropCopier.Copy(newItem,
                 new AddItemHistoryModel { ItemId = newItem.Id, Action = ActionType.Created.ToString() }));
         }
 
-        if (toCreate.Count == 0) return ([], fails);
+        if (toCreate.Count == 0) return fails;
         await db.AddRangeAsync(toCreate);
         await ih.AddItemHistoryRange(toAddHistory);
 
         await db.SaveChangesAsync();
         log.LogInformation("Created {x} items", toCreate.Count);
-        return (ok, fails);
+        return fails;
     }
 }

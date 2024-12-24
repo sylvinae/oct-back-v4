@@ -5,6 +5,6 @@ namespace API.Services.Item.Interfaces;
 
 public interface ICreateItemService
 {
-    Task<(List<ResponseItemModel> ok, List<BulkFailure<CreateItemModel>> fails)> CreateItems(
+    Task<List<BulkFailure<CreateItemModel>>?> CreateItems(
         List<CreateItemModel> items);
 }

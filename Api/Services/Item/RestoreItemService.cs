@@ -13,7 +13,7 @@ public class RestoreItemService(
     IItemHistoryService ih
 ) : IRestoreItemService
 {
-    public async Task<(List<Guid> ok, List<BulkFailure<Guid>> fails)> RestoreItems(List<Guid> itemIds)
+    public async Task<List<BulkFailure<Guid>>?> RestoreItems(List<Guid> itemIds)
     {
         log.LogInformation("Processing deletion of {Count} items.", itemIds.Count);
 
@@ -49,7 +49,6 @@ public class RestoreItemService(
             }
 
             item.IsDeleted = false;
-            ok.Add(item.Id);
 
             var hash = Cryptics.ComputeHash(item);
             toAddHistory.Add(
@@ -61,7 +60,7 @@ public class RestoreItemService(
         }
 
 
-        if (ok.Count <= 0) return (ok, fails);
+        if (toAddHistory.Count == 0) return fails;
         var result = await ih.AddItemHistoryRange(toAddHistory);
         if (!result)
         {
@@ -72,6 +71,6 @@ public class RestoreItemService(
         await db.SaveChangesAsync();
         log.LogInformation("Restoration completed. {Count} items restored.", ok.Count);
 
-        return (ok, fails);
+        return fails;
     }
 }

@@ -17,17 +17,19 @@ public class CreateExpenseService(
     UserManager<UserEntity> userManager,
     IHttpContextAccessor httpContextAccessor) : ICreateExpenseService
 {
-    public async Task<(ResponseExpenseModel? ok, BulkFailure<ExpenseModel>?fail)> CreateExpense(ExpenseModel expense)
+    public async Task<BulkFailure<ExpenseModel>?> CreateExpense(ExpenseModel expense)
     {
         log.LogInformation("Creating expenses...");
 
         var isValid = await createValidator.ValidateAsync(expense);
 
         if (!isValid.IsValid)
-            return (null, new BulkFailure<ExpenseModel>
+            return new BulkFailure<ExpenseModel>
             {
-                Input = expense, Errors = isValid.Errors.ToDictionary(e => e.PropertyName, e => e.ErrorMessage)
-            });
+                Input = expense, Errors = isValid.Errors.ToDictionary(
+                    e => e.PropertyName,
+                    e => e.ErrorMessage)
+            };
 
         var user = userManager.GetUserAsync(httpContextAccessor.HttpContext!.User).Result;
         var items = new List<ExpenseItemEntity>();
@@ -39,7 +41,6 @@ public class CreateExpenseService(
         newExpense.ExpenseItems = items;
         await db.Expenses.AddAsync(newExpense);
         await db.SaveChangesAsync();
-
-        return (PropCopier.Copy(newExpense, new ResponseExpenseModel()), null);
+        return null;
     }
 }

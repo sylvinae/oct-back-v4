@@ -29,14 +29,14 @@ public class InvoiceController(
     {
         var (ok, fail) = await createInvoiceService.CreateInvoice(invoiceModel);
 
-        return ok ? Ok() : BadRequest(new { status = "fail", fail!.Errors });
+        return ok ? Ok() : BadRequest(fail!.Errors);
     }
 
     [Authorize(Roles = "admin,cashier")]
     [HttpPost("void")]
     public async Task<IActionResult> VoidInvoice([FromBody] VoidInvoiceModel voidModel)
     {
-        var result = await voidInvoiceService.VoidInvoice(voidModel);
-        return result ? Ok() : BadRequest();
+        var ok = await voidInvoiceService.VoidInvoice(voidModel);
+        return ok ? Ok() : BadRequest();
     }
 }

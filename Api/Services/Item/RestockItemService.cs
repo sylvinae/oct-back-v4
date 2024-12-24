@@ -15,7 +15,7 @@ public class RestockItemService(
     IItemHistoryService ih) : IRestockItemService
 {
     public async
-        Task<(List<ResponseItemModel>ok, List<BulkFailure<CreateRestockItemModel>>fails)>
+        Task<List<BulkFailure<CreateRestockItemModel>>?>
         RestockItemsAsync(
             List<CreateRestockItemModel> restockItems)
     {
@@ -70,6 +70,8 @@ public class RestockItemService(
             }
         }
 
+        if (toAddHistory.Count == 0) return fails;
+
         var addItemsTask = db.Items.AddRangeAsync(toCreate);
         var addCreatedHistoryTask = ih.AddItemHistoryRange(toAddHistory);
 
@@ -77,6 +79,7 @@ public class RestockItemService(
 
         await db.SaveChangesAsync();
         log.LogInformation("Restocked {x} items. Added {y} items.", toAddHistory.Count, toAddHistory.Count);
-        return (ok, fails);
+
+        return fails;
     }
 }

@@ -30,17 +30,17 @@ public class ItemController(
     public async Task<IActionResult> CreateItems([FromBody] List<CreateItemModel> items)
     {
         if (items.Count == 0)
-            return BadRequest(new { status = "error" });
+            return BadRequest();
 
-        var (ok, fails) = await c.CreateItems(items);
+        var fails = await c.CreateItems(items);
 
-        if (ok.Count == 0 && fails.Count > 0)
-            return BadRequest(new { status = "fail", data = new { fails } });
+        if (fails is { Count: > 0 })
+            return BadRequest(fails);
 
-        if (ok.Count != 0 && fails.Count > 0)
-            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
+        if (fails is { Count: > 0 })
+            return StatusCode(207, fails);
 
-        return Ok(new { status = "success", data = ok });
+        return Ok();
     }
 
     [Authorize(Roles = "admin")]
@@ -48,17 +48,17 @@ public class ItemController(
     public async Task<IActionResult> UpdateItems([FromBody] List<UpdateItemModel> items)
     {
         if (items.Count == 0)
-            return BadRequest(new { status = "fail" });
+            return BadRequest();
 
-        var (ok, fails) = await u.UpdateItems(items);
+        var fails = await u.UpdateItems(items);
 
-        if (ok.Count == 0 && fails.Count > 0)
-            return BadRequest(new { status = "fail", errors = fails });
+        if (fails is { Count: > 0 })
+            return BadRequest(fails);
 
-        if (ok.Count != 0 && fails.Count > 0)
-            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
+        if (fails is { Count: > 0 })
+            return StatusCode(207, fails);
 
-        return Ok(new { status = "success", data = ok });
+        return Ok();
     }
 
     [Authorize(Roles = "admin")]
@@ -66,17 +66,17 @@ public class ItemController(
     public async Task<IActionResult> DeleteItems([FromBody] List<Guid> ids)
     {
         if (ids.Count == 0)
-            return BadRequest(new { status = "fail" });
+            return BadRequest();
 
-        var (ok, fails) = await d.DeleteItems(ids);
+        var fails = await d.DeleteItems(ids);
 
-        if (ok.Count == 0 && fails.Count > 0)
-            return BadRequest(new { status = "fail", errors = fails });
+        if (fails is { Count: > 0 })
+            return BadRequest(fails);
 
-        if (ok.Count != 0 && fails.Count > 0)
-            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
+        if (fails is { Count: > 0 })
+            return StatusCode(207, fails);
 
-        return Ok(new { status = "success", data = ok });
+        return Ok();
     }
 
     [Authorize(Roles = "admin")]
@@ -84,16 +84,16 @@ public class ItemController(
     public async Task<IActionResult> RestoreItems([FromBody] List<Guid> ids)
     {
         if (ids.Count == 0)
-            return BadRequest(new { status = "fail" });
+            return BadRequest();
 
-        var (ok, fails) = await re.RestoreItems(ids);
-        if (ok.Count == 0 && fails.Count > 0)
-            return BadRequest(new { status = "fail", errors = fails });
+        var fails = await re.RestoreItems(ids);
+        if (fails is { Count: > 0 })
+            return BadRequest(fails);
 
-        if (ok.Count != 0 && fails.Count > 0)
-            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
+        if (fails is { Count: > 0 })
+            return StatusCode(207, fails);
 
-        return Ok(new { status = "success", data = ok });
+        return Ok();
     }
 
     [Authorize(Roles = "admin")]
@@ -101,16 +101,15 @@ public class ItemController(
     public async Task<IActionResult> RestockItems([FromBody] List<CreateRestockItemModel> items)
     {
         if (items.Count == 0)
-            return BadRequest(new { status = "fail" });
+            return BadRequest();
 
-        var (ok, fails) = await rs.RestockItemsAsync(items);
+        var fails = await rs.RestockItemsAsync(items);
+        if (fails is { Count: > 0 })
+            return BadRequest();
 
-        if (ok.Count == 0 && fails.Count > 0)
-            return BadRequest(new { status = "fail", errors = fails });
+        if (fails is { Count: > 0 })
+            return StatusCode(207, fails);
 
-        if (ok.Count != 0 && fails.Count > 0)
-            return StatusCode(207, new { status = "partial", data = new { ok, fails } });
-
-        return Ok(new { status = "success", data = ok });
+        return Ok();
     }
 }

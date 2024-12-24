@@ -13,8 +13,8 @@ public class ExpenseController(ICreateExpenseService c) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateExpense([FromBody] ExpenseModel expense)
     {
-        var (ok, fail) = await c.CreateExpense(expense);
-        if (fail != null) return BadRequest(new { status = "fail", fail.Errors });
-        return Ok(new { status = "success", expense = ok });
+        var fail = await c.CreateExpense(expense);
+        if (fail != null) return BadRequest(fail.Errors);
+        return Ok();
     }
 }
