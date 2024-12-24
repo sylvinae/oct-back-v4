@@ -1,0 +1,29 @@
+meta {
+  name: Add Invoice
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5127/api/invoices
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "invoiceDate": "2025-12-17T00:00:00",
+      "amountTendered": 100,
+      "totalPrice": 25.00,
+      "totalDiscountedPrice": 25.00,
+      "invoiceItems": [
+          {
+              "itemId": "62bb800f-bc6e-431a-a083-9f330991503f",
+              "itemsSold": 1,
+              "usesConsumed": 1,
+              "itemPrice": 25.00,
+              "discountedPrice": 25.00
+          }
+      ]
+  }
+}

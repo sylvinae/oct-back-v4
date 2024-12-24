@@ -13,14 +13,13 @@ public class DeleteItemService(
     IItemHistoryService ih
 ) : IDeleteItemService
 {
-    public async Task<(List<Guid> ok, List<BulkFailure<Guid>> fails)> DeleteItems(List<Guid> itemIds)
+    public async Task<List<BulkFailure<Guid>>?> DeleteItems(List<Guid> itemIds)
     {
         log.LogInformation("Processing deletion of {Count} items.", itemIds.Count);
 
         var items = await db.Items.Where(item => itemIds.Contains(item.Id)).ToListAsync();
         var existingItemIds = items.Select(item => item.Id).ToHashSet();
 
-        var ok = new List<Guid>();
         var fails = new List<BulkFailure<Guid>>();
         var toAddHistory = new List<AddItemHistoryModel>();
 
@@ -49,7 +48,6 @@ public class DeleteItemService(
             }
 
             item.IsDeleted = true;
-            ok.Add(item.Id);
 
             var hash = Cryptics.ComputeHash(item);
             toAddHistory.Add(
@@ -60,8 +58,7 @@ public class DeleteItemService(
             );
         }
 
-
-        if (ok.Count <= 0) return (ok, fails);
+        if (toAddHistory.Count == 0) return fails;
         var result = await ih.AddItemHistoryRange(toAddHistory);
         if (!result)
         {
@@ -70,8 +67,8 @@ public class DeleteItemService(
         }
 
         await db.SaveChangesAsync();
-        log.LogInformation("Deletion completed. {Count} items deleted.", ok.Count);
+        log.LogInformation("Deletion completed.");
 
-        return (ok, fails);
+        return fails;
     }
 }

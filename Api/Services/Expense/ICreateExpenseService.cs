@@ -5,5 +5,5 @@ namespace API.Services.Expense;
 
 public interface ICreateExpenseService
 {
-    Task<(ResponseExpenseModel? ok, BulkFailure<ExpenseModel>? fail)> CreateExpense(ExpenseModel expense);
+    Task<BulkFailure<ExpenseModel>?> CreateExpense(ExpenseModel expense);
 }

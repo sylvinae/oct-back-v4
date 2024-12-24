@@ -5,6 +5,6 @@ namespace API.Services.Item.Interfaces;
 
 public interface IUpdateItemService
 {
-    Task<(List<ResponseItemModel> ok, List<BulkFailure<UpdateItemModel>> fails)> UpdateItems(
+    Task<List<BulkFailure<UpdateItemModel>>?> UpdateItems(
         List<UpdateItemModel> items);
 }

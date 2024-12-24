@@ -5,6 +5,6 @@ namespace API.Services.Item.Interfaces;
 
 public interface IRestockItemService
 {
-    Task<(List<ResponseItemModel> ok, List<BulkFailure<CreateRestockItemModel>> fails)> RestockItemsAsync(
+    Task<List<BulkFailure<CreateRestockItemModel>>?> RestockItemsAsync(
         List<CreateRestockItemModel> restockItems);
 }
