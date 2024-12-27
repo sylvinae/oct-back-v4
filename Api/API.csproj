@@ -34,7 +34,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Old\"/>
+        <Folder Include="1Old\"/>
+        <Folder Include="1Old\Models\"/>
+        <Folder Include="1Old\Services\Item\"/>
+        <Folder Include="Services\Product\"/>
     </ItemGroup>
 
 

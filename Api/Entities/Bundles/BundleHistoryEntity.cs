@@ -1,28 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using API.Entities.Item;
-using API.Entities.User;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Entities.Bundles;
 
 public class BundleHistoryEntity
 {
     [Key] public Guid Id { get; set; } = Guid.NewGuid();
-
-    [Required] public Guid BundleId { get; set; }
+    [Required] public Guid BundleId { get; set; } = Guid.NewGuid();
     [ForeignKey("BundleId")] public BundleEntity Bundle { get; set; } = null!;
 
-    [Required] public Guid ItemId { get; set; }
-    [ForeignKey("ItemId")] public ItemEntity Item { get; set; } = null!;
+    [Required] public string Name { get; set; } = null!;
+    [Required] [Precision(18, 2)] public decimal Price { get; set; }
+    [Required] public int Stock { get; set; }
+    public string? Barcode { get; set; }
 
-    [Required] public Guid UserId { get; set; }
-    [ForeignKey("UserId")] public UserEntity User { get; set; } = null!;
-
-    [Column(TypeName = "timestamp without time zone")]
-    public DateTime ActionTaken { get; set; } = DateTime.Now;
-
-    [MaxLength(50)] public string Action { get; set; } = "Added";
-    [Required] public int Quantity { get; set; }
-
-    public bool IsDeleted { get; set; }
+    [Required] public bool IsDeleted { get; set; }
 }

@@ -53,7 +53,7 @@ public class DeleteItemService(
             toAddHistory.Add(
                 PropCopier.Copy(
                     item,
-                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash }
+                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash, Action = ActionType.Deleted.ToString() }
                 )
             );
         }

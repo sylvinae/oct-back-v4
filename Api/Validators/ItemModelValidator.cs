@@ -10,31 +10,20 @@ public class BaseItemModelValidator<T> : AbstractValidator<T>
     {
         RuleFor(x => x.Barcode).NotEmpty().WithMessage("Barcode is required.");
         RuleFor(x => x.Brand).NotEmpty().WithMessage("Brand is required.");
-        RuleFor(x => x.Wholesale)
+        RuleFor(x => x.WholesalePrice)
             .GreaterThanOrEqualTo(0)
             .WithMessage("Wholesale price must be non-negative.");
-        RuleFor(x => x.Retail)
+        RuleFor(x => x.RetailPrice)
             .GreaterThanOrEqualTo(0)
             .WithMessage("Retail price must be non-negative.");
         RuleFor(x => x.Stock).GreaterThanOrEqualTo(0).WithMessage("Stock must be non-negative.");
         RuleFor(x => x.LowThreshold)
             .GreaterThanOrEqualTo(0)
             .WithMessage("LowThreshold must be non-negative.");
-        RuleFor(x => x.UsesMax)
-            .Must((x, usesMax) => x.IsReagent ? usesMax > 0 : usesMax == null)
-            .WithMessage("UsesMax must be greater than 0 when IsReagent is true, otherwise it must be null.");
-        RuleFor(x => x.UsesLeft)
-            .Must((x, usesLeft) => x.IsReagent ? usesLeft > 0 && usesLeft <= x.UsesMax : usesLeft == null)
-            .WithMessage(
-                "UsesLeft must be greater than 0 and not greater than UsesMax when IsReagent is true, otherwise it must be null.");
-        RuleFor(x => x.Expiry)
-            .Must((model, expiry) => expiry.HasValue || !model.HasExpiry)
-            .When(x => x.HasExpiry)
-            .WithMessage("Expiry is required when hasExpiry is true.");
 
         RuleFor(x => x.Expiry)
             .Must(BeTodayOrFutureDate)
-            .When(x => x.HasExpiry && x.Expiry.HasValue)
+            .When(x => x.Expiry.HasValue)
             .WithMessage("Expiry must not be a past date.");
     }
 

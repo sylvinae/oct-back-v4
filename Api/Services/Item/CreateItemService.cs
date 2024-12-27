@@ -20,12 +20,14 @@ public class CreateItemService(
     {
         log.LogInformation("Creating items...");
 
-        var toCreate = new List<ItemEntity>();
+        var toCreate = new List<ItemEntity>(); // Using ItemEntity
         var toAddHistory = new List<AddItemHistoryModel>();
         var fails = new List<BulkFailure<CreateItemModel>>();
         var itemHashes = items.Select(Cryptics.ComputeHash).ToHashSet();
+
+        // Check for existing hashes in the Products table, specifically looking for ItemEntity instances
         var existingHashes = db.Products
-            .OfType<ItemEntity>()
+            .OfType<ItemEntity>() // Filter for ItemEntity type
             .Where(i => itemHashes.Contains(i.Hash))
             .Select(i => i.Hash)
             .ToHashSet();
@@ -45,6 +47,7 @@ public class CreateItemService(
                 continue;
             }
 
+            // Validate the incoming item model
             var isValid = await createValidator.ValidateAsync(item);
             if (!isValid.IsValid)
             {
@@ -56,26 +59,30 @@ public class CreateItemService(
                 continue;
             }
 
-            var newItem = PropCopier.Copy(item,
-                new ItemEntity
-                {
-                    Hash = hash,
-                    IsLow = item.Stock <= item.LowThreshold
-                });
+            // Create ItemEntity from CreateItemModel
+            var newItem = PropCopier.Copy(item, new ItemEntity
+            {
+                Hash = hash,
+                IsLow = item.Stock <= item.LowThreshold // Mark if stock is low
+            });
+
+
             toCreate.Add(newItem);
 
-            toAddHistory.Add(PropCopier.Copy(newItem,
-                new AddItemHistoryModel
-                {
-                    ItemId = newItem.Id,
-                    Action = ActionType.Created.ToString()
-                }));
+            toAddHistory.Add(new AddItemHistoryModel
+            {
+                ItemId = newItem.Id,
+                Action = ActionType.Created.ToString()
+            });
         }
 
         if (toCreate.Count == 0) return fails;
+
+        // Add the newly created items to the Products table
         await db.AddRangeAsync(toCreate);
         await ih.AddItemHistoryRange(toAddHistory);
         await db.SaveChangesAsync();
+
         log.LogInformation("Created {x} items", toCreate.Count);
         return fails;
     }

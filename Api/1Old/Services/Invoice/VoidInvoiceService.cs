@@ -32,11 +32,11 @@ public class VoidInvoiceService(
             foreach (var item in invoiceItem.InvoiceItems)
             {
                 log.LogInformation("Returning item {x}", item.Id);
-                var sold = item.ItemsSold ?? 0;
+                // var sold = item.ItemsSold ?? 0;
                 var uses = item.UsesConsumed ?? 0;
-                var itemMod = ItemMod(item.ItemId, sold, uses);
+                // var itemMod = ItemMod(item.ItemId, sold, uses);
 
-                if (!itemMod.Result) return false;
+                // if (!itemMod.Result) return false;
             }
 
 
@@ -75,7 +75,7 @@ public class VoidInvoiceService(
 
 
             item.Stock += quantity;
-            item.UsesLeft += uses;
+            // item.UsesLeft += uses;
 
 
             var newHash = Cryptics.ComputeHash(item);

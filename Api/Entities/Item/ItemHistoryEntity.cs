@@ -26,7 +26,7 @@ public class ItemHistoryEntity
 
     [Precision(18, 2)] public decimal Wholesale { get; set; }
 
-    [Precision(18, 2)] public decimal Retail { get; set; }
+    [Precision(18, 2)] public decimal RetailPrice { get; set; }
 
     [Required] public int Stock { get; set; }
 

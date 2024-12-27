@@ -50,7 +50,8 @@ public class UpdateItemService(
             var hash = Cryptics.ComputeHash(item);
             existingItem.Hash = hash;
             db.Entry(existingItem).CurrentValues.SetValues(item);
-            toAddHistory.Add(PropCopier.Copy(existingItem, new AddItemHistoryModel { ItemId = existingItem.Id })
+            toAddHistory.Add(PropCopier.Copy(existingItem,
+                new AddItemHistoryModel { ItemId = existingItem.Id, Action = ActionType.Updated.ToString() })
             );
         }
 

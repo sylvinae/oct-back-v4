@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using API.Entities.Products;
 
 namespace API.Entities.Item;
@@ -6,8 +7,13 @@ public class ItemEntity : ProductEntity
 {
     public string? Brand { get; set; }
     public string? Generic { get; set; }
+    public string? Classification { get; set; }
+    public string? Formulation { get; set; }
+    public string? Location { get; set; }
     public string? Company { get; set; }
-    public string Hash { get; set; } = null!;
+
+    [Required] public string Hash { get; set; } = null!;
+
     public int LowThreshold { get; set; }
 
     public DateTime? Expiry { get; set; }

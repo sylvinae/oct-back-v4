@@ -16,7 +16,7 @@ public class Cryptics
             "Formulation",
             "Location",
             "Wholesale",
-            "Retail",
+            "RetailPrice",
             "LowThreshold",
             "Company",
             "HasExpiry",

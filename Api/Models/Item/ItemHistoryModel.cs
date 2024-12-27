@@ -12,7 +12,7 @@ public class BaseItemHistoryModel
     public string? Location { get; set; }
     public string? Company { get; set; }
     public decimal Wholesale { get; set; }
-    public decimal Retail { get; set; }
+    public decimal RetailPrice { get; set; }
     public int Stock { get; set; }
     public int LowThreshold { get; set; }
     public bool IsLow { get; set; }
