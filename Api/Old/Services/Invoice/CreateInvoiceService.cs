@@ -76,8 +76,22 @@ public class CreateInvoiceService(
 
 
             var newHash = Cryptics.ComputeHash(item);
-            item.Stock -= quantity;
-            item.UsesLeft -= uses;
+
+            if (uses != 0 && item.UsesLeft < uses)
+            {
+                var temp = uses - item.UsesLeft;
+
+                item.Stock -= 1;
+                item.UsesLeft = item.Stock > 0 ? item.UsesMax : null;
+
+                if (temp > 0 && item.Stock > 0) item.UsesLeft = item.UsesLeft - temp > 0 ? item.UsesLeft - temp : 0;
+            }
+            else
+            {
+                item.Stock -= quantity;
+                item.UsesLeft -= uses;
+            }
+
             item.Hash = newHash;
 
             toAddHistory.Add(

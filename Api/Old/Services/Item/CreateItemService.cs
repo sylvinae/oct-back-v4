@@ -23,24 +23,23 @@ public class CreateItemService(
         var toCreate = new List<ItemEntity>();
         var toAddHistory = new List<AddItemHistoryModel>();
         var fails = new List<BulkFailure<CreateItemModel>>();
-
         var itemHashes = items.Select(Cryptics.ComputeHash).ToHashSet();
-        var existingHashes = db.Items
+        var existingHashes = db.Products
+            .OfType<ItemEntity>()
             .Where(i => itemHashes.Contains(i.Hash))
             .Select(i => i.Hash)
             .ToHashSet();
 
-
         foreach (var item in items)
         {
             var hash = Cryptics.ComputeHash(item);
-
             if (existingHashes.Contains(hash))
             {
                 log.LogInformation("Skipping item with hash {x}...", hash);
                 fails.Add(new BulkFailure<CreateItemModel>
                 {
-                    Input = item, Errors = new Dictionary<string, string>
+                    Input = item,
+                    Errors = new Dictionary<string, string>
                         { { "item", "Item already exists." } }
                 });
                 continue;
@@ -58,16 +57,24 @@ public class CreateItemService(
             }
 
             var newItem = PropCopier.Copy(item,
-                new ItemEntity { Hash = hash, IsLow = item.Stock <= item.LowThreshold });
+                new ItemEntity
+                {
+                    Hash = hash,
+                    IsLow = item.Stock <= item.LowThreshold
+                });
             toCreate.Add(newItem);
+
             toAddHistory.Add(PropCopier.Copy(newItem,
-                new AddItemHistoryModel { ItemId = newItem.Id, Action = ActionType.Created.ToString() }));
+                new AddItemHistoryModel
+                {
+                    ItemId = newItem.Id,
+                    Action = ActionType.Created.ToString()
+                }));
         }
 
         if (toCreate.Count == 0) return fails;
         await db.AddRangeAsync(toCreate);
         await ih.AddItemHistoryRange(toAddHistory);
-
         await db.SaveChangesAsync();
         log.LogInformation("Created {x} items", toCreate.Count);
         return fails;
