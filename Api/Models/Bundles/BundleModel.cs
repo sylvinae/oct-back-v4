@@ -3,16 +3,13 @@ namespace API.Models.Bundles;
 public class BaseBundleModel
 {
     public string Name { get; set; } = null!;
-    public decimal Price { get; set; }
+    public decimal RetailPrice { get; set; }
     public int Stock { get; set; }
     public string? Barcode { get; set; }
     public bool IsDeleted { get; set; }
 }
 
-public class CreateBundle : BaseBundleModel
-{
-    public List<Guid>? Items { get; set; } = [];
-}
+public class CreateBundle : BaseBundleModel;
 
 public class UpdateBundle : BaseBundleModel
 {

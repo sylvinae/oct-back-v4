@@ -1,4 +1,5 @@
 using API.Db;
+using API.Entities.Item;
 using API.Models.Invoice;
 using API.Models.Item;
 using API.Services.Invoice.Interfaces;
@@ -19,24 +20,23 @@ public class VoidInvoiceService(
         try
         {
             log.LogInformation("Void Interfaces called.");
-            var invoiceItem =
+            var invoiceEntity =
                 await db.Invoices.Include(i => i.InvoiceItems).FirstOrDefaultAsync(i => i.Id == invoice.Id);
 
-            if (invoiceItem == null)
+            if (invoiceEntity == null)
                 return false;
 
-            invoiceItem.IsVoided = true;
-            invoiceItem.VoidReason = invoice.VoidReason;
+            invoiceEntity.IsVoided = true;
+            invoiceEntity.VoidReason = invoice.VoidReason;
 
 
-            foreach (var item in invoiceItem.InvoiceItems)
+            foreach (var item in invoiceEntity.InvoiceItems)
             {
                 log.LogInformation("Returning item {x}", item.Id);
-                // var sold = item.ItemsSold ?? 0;
-                var uses = item.UsesConsumed ?? 0;
-                // var itemMod = ItemMod(item.ItemId, sold, uses);
 
-                // if (!itemMod.Result) return false;
+                var itemMod = ItemMod(item.ProductId, item.QuantitySold);
+
+                if (!itemMod.Result) return false;
             }
 
 
@@ -50,41 +50,30 @@ public class VoidInvoiceService(
         }
     }
 
-    private async Task<bool> ItemMod(Guid itemId, int uses, int quantity)
+    private async Task<bool> ItemMod(Guid itemId, int quantity)
     {
         const ActionType action = ActionType.Voided;
         try
         {
             log.LogInformation("Modding item {x} with action {action}.", itemId, action);
 
-            var item = await db.Items.FindAsync(itemId);
-            if (item == null)
+            var product = await db.Products.OfType<ItemEntity>().FirstOrDefaultAsync(p => p.Id == itemId);
+            if (product == null)
             {
                 log.LogWarning("Interfaces {x} not found.", itemId);
                 return false;
             }
 
-            if (quantity == 0 && uses == 0)
-            {
-                log.LogWarning(
-                    "No modification needed for item {x}. Quantity and uses are zero.",
-                    itemId
-                );
-                return false;
-            }
+            product.Stock += quantity;
 
 
-            item.Stock += quantity;
-            // item.UsesLeft += uses;
+            var newHash = Cryptics.ComputeHash(product);
+            product.Hash = newHash;
 
-
-            var newHash = Cryptics.ComputeHash(item);
-            item.Hash = newHash;
-
-            log.LogInformation("Adding {x} history to {y}", action, item);
+            log.LogInformation("Adding {x} history to {y}", action, product);
             await ih.AddItemHistory(
-                PropCopier.Copy(item,
-                    new AddItemHistoryModel { ItemId = item.Id, Action = ActionType.Voided.ToString() })
+                PropCopier.Copy(product,
+                    new AddItemHistoryModel { ItemId = product.Id, Action = ActionType.Voided.ToString() })
             );
 
             return true;

@@ -96,9 +96,6 @@ namespace API.Migrations
                     b.Property<Guid>("BundleId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uuid");
 
@@ -223,10 +220,7 @@ namespace API.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<int?>("QuantitySold")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsesConsumed")
+                    b.Property<int>("QuantitySold")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -319,13 +313,7 @@ namespace API.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("UsesLeft")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsesMax")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Wholesale")
+                    b.Property<decimal>("WholesalePrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
@@ -352,13 +340,8 @@ namespace API.Migrations
                         .HasMaxLength(13)
                         .HasColumnType("character varying(13)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProductType")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<decimal>("RetailPrice")
                         .HasPrecision(18, 2)
@@ -592,14 +575,9 @@ namespace API.Migrations
                 {
                     b.HasBaseType("API.Entities.Products.ProductEntity");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.ToTable("Products", t =>
-                        {
-                            t.Property("IsDeleted")
-                                .HasColumnName("BundleEntity_IsDeleted");
-                        });
+                    b.Property<string>("BundleName")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasDiscriminator().HasValue("BundleEntity");
                 });
@@ -618,7 +596,7 @@ namespace API.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("Expiry")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Formulation")
                         .HasColumnType("text");
@@ -629,9 +607,6 @@ namespace API.Migrations
                     b.Property<string>("Hash")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsExpired")
                         .HasColumnType("boolean");
@@ -647,6 +622,10 @@ namespace API.Migrations
 
                     b.Property<int>("LowThreshold")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("WholesalePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.HasDiscriminator().HasValue("ItemEntity");
                 });

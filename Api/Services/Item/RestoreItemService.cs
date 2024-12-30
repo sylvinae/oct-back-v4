@@ -1,4 +1,5 @@
 using API.Db;
+using API.Entities.Item;
 using API.Models;
 using API.Models.Item;
 using API.Services.Item.Interfaces;
@@ -17,10 +18,9 @@ public class RestoreItemService(
     {
         log.LogInformation("Processing deletion of {Count} items.", itemIds.Count);
 
-        var items = await db.Items.Where(item => itemIds.Contains(item.Id)).ToListAsync();
+        var items = await db.Products.OfType<ItemEntity>().Where(item => itemIds.Contains(item.Id)).ToListAsync();
         var existingItemIds = items.Select(item => item.Id).ToHashSet();
 
-        var ok = new List<Guid>();
         var fails = new List<BulkFailure<Guid>>();
         var toAddHistory = new List<AddItemHistoryModel>();
 
@@ -54,7 +54,7 @@ public class RestoreItemService(
             toAddHistory.Add(
                 PropCopier.Copy(
                     item,
-                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash }
+                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash, Action = ActionType.Restored.ToString() }
                 )
             );
         }
@@ -69,7 +69,7 @@ public class RestoreItemService(
         }
 
         await db.SaveChangesAsync();
-        log.LogInformation("Restoration completed. {Count} items restored.", ok.Count);
+        log.LogInformation("Restoration completed");
 
         return fails;
     }

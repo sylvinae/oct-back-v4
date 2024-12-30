@@ -60,26 +60,25 @@ namespace API.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
+                    Barcode = table.Column<string>(type: "text", nullable: true),
                     RetailPrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: false),
-                    Barcode = table.Column<string>(type: "text", nullable: true),
-                    ProductType = table.Column<string>(type: "text", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     Discriminator = table.Column<string>(type: "character varying(13)", maxLength: 13, nullable: false),
-                    BundleEntity_IsDeleted = table.Column<bool>(type: "boolean", nullable: true),
+                    BundleName = table.Column<string>(type: "text", nullable: true),
                     Brand = table.Column<string>(type: "text", nullable: true),
                     Generic = table.Column<string>(type: "text", nullable: true),
                     Classification = table.Column<string>(type: "text", nullable: true),
                     Formulation = table.Column<string>(type: "text", nullable: true),
                     Location = table.Column<string>(type: "text", nullable: true),
                     Company = table.Column<string>(type: "text", nullable: true),
+                    WholesalePrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
                     Hash = table.Column<string>(type: "text", nullable: true),
                     LowThreshold = table.Column<int>(type: "integer", nullable: true),
-                    Expiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Expiry = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     IsReagent = table.Column<bool>(type: "boolean", nullable: true),
                     IsLow = table.Column<bool>(type: "boolean", nullable: true),
-                    IsExpired = table.Column<bool>(type: "boolean", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: true)
+                    IsExpired = table.Column<bool>(type: "boolean", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -270,8 +269,7 @@ namespace API.Migrations
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     ActionTaken = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Action = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
+                    Quantity = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -335,16 +333,14 @@ namespace API.Migrations
                     Classification = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     Formulation = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     Location = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Wholesale = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Company = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    WholesalePrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     RetailPrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: false),
                     LowThreshold = table.Column<int>(type: "integer", nullable: false),
-                    Company = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     HasExpiry = table.Column<bool>(type: "boolean", nullable: false),
                     Expiry = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     IsReagent = table.Column<bool>(type: "boolean", nullable: false),
-                    UsesLeft = table.Column<int>(type: "integer", nullable: true),
-                    UsesMax = table.Column<int>(type: "integer", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     Hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     IsLow = table.Column<bool>(type: "boolean", nullable: false),
@@ -396,8 +392,7 @@ namespace API.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     InvoiceId = table.Column<Guid>(type: "uuid", nullable: false),
                     ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    QuantitySold = table.Column<int>(type: "integer", nullable: true),
-                    UsesConsumed = table.Column<int>(type: "integer", nullable: true),
+                    QuantitySold = table.Column<int>(type: "integer", nullable: false),
                     PurchasePrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     DiscountedPrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true)
                 },

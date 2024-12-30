@@ -7,12 +7,6 @@ public class BaseInvoiceModelValidator : AbstractValidator<BaseInvoiceModel>
 {
     public BaseInvoiceModelValidator()
     {
-        RuleFor(x => x.InvoiceDate)
-            .NotEmpty()
-            .WithMessage("Interfaces date is required.")
-            .Must(invoiceDate => BeTodayOrFutureDate(invoiceDate))
-            .WithMessage("Interfaces date must be in the future or today.");
-
         RuleFor(x => x.AmountTendered)
             .GreaterThanOrEqualTo(0)
             .WithMessage("Amount tendered cannot be negative.")
@@ -27,13 +21,6 @@ public class BaseInvoiceModelValidator : AbstractValidator<BaseInvoiceModel>
             .GreaterThanOrEqualTo(0)
             .When(x => x.TotalDiscountedPrice.HasValue)
             .WithMessage("Total discounted price cannot be negative.");
-    }
-
-    private static bool BeTodayOrFutureDate(DateTime? invoice)
-    {
-        if (!invoice.HasValue) return false;
-        var invoiceDate = invoice.Value.Date;
-        return invoiceDate >= DateTime.UtcNow.Date;
     }
 }
 

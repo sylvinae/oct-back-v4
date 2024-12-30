@@ -1,9 +1,11 @@
 using API.Db;
+using API.Entities.Item;
 using API.Models;
 using API.Models.Item;
 using API.Services.Item.Interfaces;
 using API.Utils;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Services.Item;
 
@@ -35,7 +37,7 @@ public class UpdateItemService(
                 continue;
             }
 
-            var existingItem = await db.Items.FindAsync(item.Id);
+            var existingItem = await db.Products.OfType<ItemEntity>().FirstOrDefaultAsync(i => i.Id == item.Id);
 
             if (existingItem == null)
             {

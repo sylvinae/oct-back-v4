@@ -1,4 +1,5 @@
 using API.Db;
+using API.Entities.Item;
 using API.Models;
 using API.Models.Item;
 using API.Services.Item.Interfaces;
@@ -17,7 +18,7 @@ public class DeleteItemService(
     {
         log.LogInformation("Processing deletion of {Count} items.", itemIds.Count);
 
-        var items = await db.Items.Where(item => itemIds.Contains(item.Id)).ToListAsync();
+        var items = await db.Products.OfType<ItemEntity>().Where(item => itemIds.Contains(item.Id)).ToListAsync();
         var existingItemIds = items.Select(item => item.Id).ToHashSet();
 
         var fails = new List<BulkFailure<Guid>>();
@@ -53,7 +54,8 @@ public class DeleteItemService(
             toAddHistory.Add(
                 PropCopier.Copy(
                     item,
-                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash, Action = ActionType.Deleted.ToString() }
+                    new AddItemHistoryModel
+                        { ItemId = item.Id, Hash = hash, Action = ActionType.Deleted.ToString() }
                 )
             );
         }

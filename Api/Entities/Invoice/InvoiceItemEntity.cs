@@ -14,8 +14,7 @@ public class InvoiceItemEntity
     [ForeignKey("InvoiceId")] public InvoiceEntity Invoice { get; set; } = null!;
     [Required] public Guid ProductId { get; set; }
     [ForeignKey("ProductId")] public ProductEntity Product { get; set; } = null!;
-    public int? QuantitySold { get; set; }
-    public int? UsesConsumed { get; set; }
+    public int QuantitySold { get; set; }
     [Required] [Precision(18, 2)] public decimal PurchasePrice { get; set; }
     [Precision(18, 2)] public decimal? DiscountedPrice { get; set; }
 }

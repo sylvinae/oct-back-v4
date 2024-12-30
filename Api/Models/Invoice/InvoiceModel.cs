@@ -5,7 +5,6 @@ namespace API.Models.Invoice;
 public class BaseInvoiceModel
 {
     public Guid? UserId { get; set; }
-    public DateTime InvoiceDate { get; set; }
     public decimal AmountTendered { get; set; }
     public decimal TotalPrice { get; set; }
     public decimal? TotalDiscountedPrice { get; set; }
