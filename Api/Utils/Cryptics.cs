@@ -15,14 +15,13 @@ public class Cryptics
             "Classification",
             "Formulation",
             "Location",
-            "Wholesale",
-            "Retail",
+            "WholesalePrice",
+            "RetailPrice",
             "LowThreshold",
             "Company",
             "HasExpiry",
             "Expiry",
             "IsReagent",
-            "UsesMax",
             "IsExpired",
             "IsDeleted"
         };

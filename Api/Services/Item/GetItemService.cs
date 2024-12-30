@@ -9,6 +9,6 @@ public class GetItemService(Context db, ILogger<GetItemService> log) : IGetItemS
     public IQueryable<ItemEntity> GetAllItems()
     {
         log.LogInformation("Getting all items.");
-        return db.Items;
+        return db.Products.OfType<ItemEntity>();
     }
 }

@@ -14,7 +14,7 @@ public class InvoiceEntity
 
     [Required]
     [Column(TypeName = "timestamp without time zone")]
-    public DateTime InvoiceDate { get; set; }
+    public DateTime InvoiceDate { get; set; } = DateTime.Now;
 
     [Required] public decimal AmountTendered { get; set; }
 

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20241220144649_Initial")]
+    [Migration("20241230192559_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -24,6 +24,100 @@ namespace API.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("API.Entities.Bundles.BundleHistoryEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Barcode")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("BundleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("Stock")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BundleId");
+
+                    b.ToTable("BundleHistories");
+                });
+
+            modelBuilder.Entity("API.Entities.Bundles.BundleItemEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BundleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BundleId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("BundleItems");
+                });
+
+            modelBuilder.Entity("API.Entities.Bundles.BundleItemHistoryEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("ActionTaken")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid>("BundleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BundleId");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BundleItemHistories");
+                });
 
             modelBuilder.Entity("API.Entities.Expense.ExpenseEntity", b =>
                 {
@@ -116,113 +210,29 @@ namespace API.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal?>("DiscountedPrice")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<Guid>("InvoiceId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ItemId")
+                    b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("ItemPrice")
+                    b.Property<decimal>("PurchasePrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<int?>("ItemsSold")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsesConsumed")
+                    b.Property<int>("QuantitySold")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("InvoiceId");
 
-                    b.HasIndex("ItemId");
+                    b.HasIndex("ProductId");
 
                     b.ToTable("InvoiceItems");
-                });
-
-            modelBuilder.Entity("API.Entities.Item.ItemEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Barcode")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Brand")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Classification")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Company")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime?>("Expiry")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Formulation")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Generic")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<bool>("HasExpiry")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Hash")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsExpired")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsLow")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsReagent")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Location")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<int>("LowThreshold")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Retail")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<int>("Stock")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsesLeft")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsesMax")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Wholesale")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Items");
                 });
 
             modelBuilder.Entity("API.Entities.Item.ItemHistoryEntity", b =>
@@ -296,7 +306,7 @@ namespace API.Migrations
                     b.Property<int>("LowThreshold")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("Retail")
+                    b.Property<decimal>("RetailPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
@@ -306,13 +316,7 @@ namespace API.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("UsesLeft")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UsesMax")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Wholesale")
+                    b.Property<decimal>("WholesalePrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
@@ -323,6 +327,39 @@ namespace API.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ItemHistories");
+                });
+
+            modelBuilder.Entity("API.Entities.Products.ProductEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Barcode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("RetailPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("Stock")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Products");
+
+                    b.HasDiscriminator().HasValue("ProductEntity");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("API.Entities.User.UserEntity", b =>
@@ -537,6 +574,122 @@ namespace API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("API.Entities.Bundles.BundleEntity", b =>
+                {
+                    b.HasBaseType("API.Entities.Products.ProductEntity");
+
+                    b.Property<string>("BundleName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasDiscriminator().HasValue("BundleEntity");
+                });
+
+            modelBuilder.Entity("API.Entities.Item.ItemEntity", b =>
+                {
+                    b.HasBaseType("API.Entities.Products.ProductEntity");
+
+                    b.Property<string>("Brand")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Classification")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Company")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("Expiry")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Formulation")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Generic")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsExpired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsLow")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsReagent")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("text");
+
+                    b.Property<int>("LowThreshold")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("WholesalePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasDiscriminator().HasValue("ItemEntity");
+                });
+
+            modelBuilder.Entity("API.Entities.Bundles.BundleHistoryEntity", b =>
+                {
+                    b.HasOne("API.Entities.Bundles.BundleEntity", "Bundle")
+                        .WithMany()
+                        .HasForeignKey("BundleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bundle");
+                });
+
+            modelBuilder.Entity("API.Entities.Bundles.BundleItemEntity", b =>
+                {
+                    b.HasOne("API.Entities.Bundles.BundleEntity", "Bundle")
+                        .WithMany("BundleItems")
+                        .HasForeignKey("BundleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("API.Entities.Item.ItemEntity", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bundle");
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("API.Entities.Bundles.BundleItemHistoryEntity", b =>
+                {
+                    b.HasOne("API.Entities.Bundles.BundleEntity", "Bundle")
+                        .WithMany()
+                        .HasForeignKey("BundleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("API.Entities.Item.ItemEntity", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("API.Entities.User.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bundle");
+
+                    b.Navigation("Item");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("API.Entities.Expense.ExpenseEntity", b =>
                 {
                     b.HasOne("API.Entities.User.UserEntity", "User")
@@ -578,15 +731,15 @@ namespace API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Item.ItemEntity", "Item")
+                    b.HasOne("API.Entities.Products.ProductEntity", "Product")
                         .WithMany("InvoiceItems")
-                        .HasForeignKey("ItemId")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Invoice");
 
-                    b.Navigation("Item");
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("API.Entities.Item.ItemHistoryEntity", b =>
@@ -669,11 +822,9 @@ namespace API.Migrations
                     b.Navigation("InvoiceItems");
                 });
 
-            modelBuilder.Entity("API.Entities.Item.ItemEntity", b =>
+            modelBuilder.Entity("API.Entities.Products.ProductEntity", b =>
                 {
                     b.Navigation("InvoiceItems");
-
-                    b.Navigation("ItemHistory");
                 });
 
             modelBuilder.Entity("API.Entities.User.UserEntity", b =>
@@ -683,6 +834,16 @@ namespace API.Migrations
                     b.Navigation("Invoices");
 
                     b.Navigation("ItemHistories");
+                });
+
+            modelBuilder.Entity("API.Entities.Bundles.BundleEntity", b =>
+                {
+                    b.Navigation("BundleItems");
+                });
+
+            modelBuilder.Entity("API.Entities.Item.ItemEntity", b =>
+                {
+                    b.Navigation("ItemHistory");
                 });
 #pragma warning restore 612, 618
         }

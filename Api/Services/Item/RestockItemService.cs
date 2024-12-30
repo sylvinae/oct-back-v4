@@ -25,10 +25,9 @@ public class RestockItemService(
         var toAddHistory = new List<AddItemHistoryModel>();
 
         var fails = new List<BulkFailure<CreateRestockItemModel>>();
-        var ok = new List<ResponseItemModel>();
 
         var existingHashes = new HashSet<string>(restockItems.Select(Cryptics.ComputeHash).ToList());
-        var existingItems = db.Items
+        var existingItems = db.Products.OfType<ItemEntity>()
             .Where(i => existingHashes.Contains(i.Hash))
             .ToList();
 
@@ -53,7 +52,6 @@ public class RestockItemService(
                 var newItem = PropCopier.Copy(item,
                     new ItemEntity { Hash = hash, IsLow = item.Stock <= item.LowThreshold });
                 toCreate.Add(newItem);
-                ok.Add(PropCopier.Copy(newItem, new ResponseItemModel()));
                 toAddHistory.Add(PropCopier.Copy(item, new AddItemHistoryModel
                 {
                     ItemId = newItem.Id, Hash = hash, Action = ActionType.Created.ToString()
@@ -64,15 +62,15 @@ public class RestockItemService(
                 log.LogInformation("Restocking {x}...", existingItem.Id);
                 existingItem.Stock += item.Stock;
                 item.Stock = existingItem.Stock;
-                ok.Add(PropCopier.Copy(existingItem, new ResponseItemModel()));
                 toAddHistory.Add(PropCopier.Copy(item,
-                    new AddItemHistoryModel { ItemId = existingItem.Id, Action = ActionType.Restored.ToString() }));
+                    new AddItemHistoryModel
+                        { ItemId = existingItem.Id, Action = ActionType.Restocked.ToString() }));
             }
         }
 
         if (toAddHistory.Count == 0) return fails;
 
-        var addItemsTask = db.Items.AddRangeAsync(toCreate);
+        var addItemsTask = db.Products.AddRangeAsync(toCreate);
         var addCreatedHistoryTask = ih.AddItemHistoryRange(toAddHistory);
 
         await Task.WhenAll(addItemsTask, addCreatedHistoryTask);

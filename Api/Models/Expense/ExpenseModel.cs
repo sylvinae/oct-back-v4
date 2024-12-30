@@ -8,6 +8,8 @@ public class ExpenseModel
     public ICollection<ExpenseItemModel> ExpenseItems { get; set; } = [];
 }
 
+public class CreateExpenseModel : ExpenseModel;
+
 public class ResponseExpenseModel : ExpenseModel
 {
     public Guid? Id { get; set; }

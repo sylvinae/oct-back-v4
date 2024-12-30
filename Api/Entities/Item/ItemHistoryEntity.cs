@@ -23,24 +23,19 @@ public class ItemHistoryEntity
     [MaxLength(50)] public string? Classification { get; set; }
     [MaxLength(50)] public string? Formulation { get; set; }
     [MaxLength(50)] public string? Location { get; set; }
+    [MaxLength(50)] public string? Company { get; set; }
 
-    [Precision(18, 2)] public decimal Wholesale { get; set; }
-
-    [Precision(18, 2)] public decimal Retail { get; set; }
-
+    [Precision(18, 2)] public decimal WholesalePrice { get; set; }
+    [Precision(18, 2)] public decimal RetailPrice { get; set; }
     [Required] public int Stock { get; set; }
-
     [Required] public int LowThreshold { get; set; }
 
-    [MaxLength(50)] public string? Company { get; set; }
     public bool HasExpiry { get; set; }
 
     [Column(TypeName = "timestamp without time zone")]
     public DateTime? Expiry { get; set; }
 
     public bool IsReagent { get; set; }
-    public int? UsesLeft { get; set; }
-    public int? UsesMax { get; set; }
     public bool IsDeleted { get; set; }
 
     [MaxLength(64)] [Required] public string Hash { get; set; } = null!;

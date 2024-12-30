@@ -3,6 +3,7 @@ using API.Entities.Expense;
 using API.Entities.User;
 using API.Models;
 using API.Models.Expense;
+using API.Services.Expense.Interfaces;
 using API.Services.Item;
 using API.Utils;
 using FluentValidation;
@@ -17,7 +18,7 @@ public class CreateExpenseService(
     UserManager<UserEntity> userManager,
     IHttpContextAccessor httpContextAccessor) : ICreateExpenseService
 {
-    public async Task<BulkFailure<ExpenseModel>?> CreateExpense(ExpenseModel expense)
+    public async Task<BulkFailure<ExpenseModel>?> CreateExpense(CreateExpenseModel expense)
     {
         log.LogInformation("Creating expenses...");
 

@@ -7,29 +7,17 @@ public class InvoiceItemModelValidator : AbstractValidator<InvoiceItemModel>
 {
     public InvoiceItemModelValidator()
     {
-        RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId is required.");
+        RuleFor(x => x.ProductId).NotEmpty().WithMessage("ProductId is required.");
 
         RuleFor(x => x.ItemsSold)
             .GreaterThan(0)
-            .When(x => x.ItemsSold.HasValue)
+            .When(x => x.ItemsSold <= 0)
             .WithMessage("ItemQuantity must be greater than 0 if specified.");
 
-        RuleFor(x => x.UsesConsumed)
-            .GreaterThanOrEqualTo(0)
-            .When(x => x.UsesConsumed.HasValue)
-            .WithMessage("UsesConsumed must be non-negative if specified.");
-
-        RuleFor(x => x.ItemPrice)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage("ItemPrice must be non-negative.");
 
         RuleFor(x => x.DiscountedPrice)
             .GreaterThanOrEqualTo(0)
             .When(x => x.DiscountedPrice.HasValue)
             .WithMessage("DiscountedPrice must be non-negative if specified.");
-
-        RuleFor(x => x.IsReagent)
-            .Must(x => x || x == false)
-            .WithMessage("IsReagent must be true, false.");
     }
 }

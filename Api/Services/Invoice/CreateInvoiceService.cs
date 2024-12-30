@@ -1,5 +1,6 @@
 using API.Db;
 using API.Entities.Invoice;
+using API.Entities.Item;
 using API.Entities.User;
 using API.Models;
 using API.Models.Invoice;
@@ -9,6 +10,7 @@ using API.Services.Item.Interfaces;
 using API.Utils;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Services.Invoice;
 
@@ -43,13 +45,15 @@ public class CreateInvoiceService(
 
         foreach (var item in invoice.InvoiceItems)
         {
-            newInvoiceItemsEntity.Add(PropCopier.Copy(item, new InvoiceItemEntity { InvoiceId = newInvoiceEntity.Id }
+            var itemEntity = await db.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId);
+            if (itemEntity == null)
+                throw new Exception();
+
+            newInvoiceItemsEntity.Add(PropCopier.Copy(item,
+                new InvoiceItemEntity { InvoiceId = newInvoiceEntity.Id, PurchasePrice = itemEntity.RetailPrice }
             ));
 
-            var sold = item.ItemsSold ?? 0;
-            var used = item.UsesConsumed ?? 0;
-
-            var result = ItemMod(item.ItemId, used, sold, toAddHistory);
+            var result = ProductMod(item.ProductId, item.ItemsSold, toAddHistory);
 
             if (!result.Result)
                 throw new Exception();
@@ -63,32 +67,32 @@ public class CreateInvoiceService(
         return (true, null);
     }
 
-    private async Task<bool> ItemMod(Guid itemId, int uses, int quantity, List<AddItemHistoryModel> toAddHistory)
+    private async Task<bool> ProductMod(Guid productId, int quantity, List<AddItemHistoryModel> toAddHistory)
     {
         try
         {
-            var item = await db.Items.FindAsync(itemId);
-            if (item == null)
+            var product = await db.Products.OfType<ItemEntity>().FirstOrDefaultAsync(p => p.Id == productId);
+            if (product == null)
             {
-                log.LogWarning("Item {x} not found.", itemId);
+                log.LogWarning("Item {x} not found.", productId);
                 return false;
             }
 
+            product.Stock -= quantity;
 
-            var newHash = Cryptics.ComputeHash(item);
-            item.Stock -= quantity;
-            item.UsesLeft -= uses;
-            item.Hash = newHash;
+            var newHash = Cryptics.ComputeHash(product);
+
+            product.Hash = newHash;
 
             toAddHistory.Add(
-                PropCopier.Copy(item,
-                    new AddItemHistoryModel { ItemId = item.Id, Action = ActionType.Purchased.ToString() }));
+                PropCopier.Copy(product,
+                    new AddItemHistoryModel { ItemId = product.Id, Action = ActionType.Purchased.ToString() }));
 
             return true;
         }
         catch (Exception ex)
         {
-            log.LogError("Error modding item {x}. Exception: {ex}", itemId, ex);
+            log.LogError("Error modding item {x}. Exception: {ex}", productId, ex);
             return false;
         }
     }
