@@ -53,7 +53,7 @@ public class UpdateItemService(
             existingItem.Hash = hash;
             db.Entry(existingItem).CurrentValues.SetValues(item);
             toAddHistory.Add(PropCopier.Copy(existingItem,
-                new AddItemHistoryModel { ItemId = existingItem.Id, Action = ActionType.Updated.ToString() })
+                new AddItemHistoryModel { ItemId = existingItem.Id, Action = Actions.Updated.ToString() })
             );
         }
 

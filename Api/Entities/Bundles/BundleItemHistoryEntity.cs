@@ -24,9 +24,3 @@ public class BundleItemHistoryEntity
     [MaxLength(50)] public string Action { get; set; } = null!;
     [Required] public int Quantity { get; set; }
 }
-
-public enum Actions
-{
-    Added,
-    Removed
-}
