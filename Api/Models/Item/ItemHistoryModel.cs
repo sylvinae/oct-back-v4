@@ -34,14 +34,3 @@ public class ResponseItemHistoryModel : BaseItemHistoryModel
     public Guid Id { get; set; }
     public DateTime ActionTaken { get; set; }
 }
-
-public enum ActionType
-{
-    Created,
-    Updated,
-    Deleted,
-    Restored,
-    Voided,
-    Purchased,
-    Restocked
-}

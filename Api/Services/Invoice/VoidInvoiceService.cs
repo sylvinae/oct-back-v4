@@ -1,5 +1,6 @@
 using API.Db;
 using API.Entities.Item;
+using API.Models;
 using API.Models.Invoice;
 using API.Models.Item;
 using API.Services.Invoice.Interfaces;
@@ -52,7 +53,7 @@ public class VoidInvoiceService(
 
     private async Task<bool> ItemMod(Guid itemId, int quantity)
     {
-        const ActionType action = ActionType.Voided;
+        const Actions action = Actions.Voided;
         try
         {
             log.LogInformation("Modding item {x} with action {action}.", itemId, action);
@@ -73,7 +74,7 @@ public class VoidInvoiceService(
             log.LogInformation("Adding {x} history to {y}", action, product);
             await ih.AddItemHistory(
                 PropCopier.Copy(product,
-                    new AddItemHistoryModel { ItemId = product.Id, Action = ActionType.Voided.ToString() })
+                    new AddItemHistoryModel { ItemId = product.Id, Action = Actions.Voided.ToString() })
             );
 
             return true;

@@ -31,7 +31,7 @@ public class BaseItemModelValidator<T> : AbstractValidator<T>
     {
         if (!expiry.HasValue) return false;
         var expiryDate = expiry.Value.Date;
-        return expiryDate >= DateTime.UtcNow.Date;
+        return expiryDate >= DateTime.Now.Date;
     }
 }
 

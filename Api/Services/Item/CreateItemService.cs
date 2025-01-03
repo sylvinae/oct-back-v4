@@ -67,7 +67,7 @@ public class CreateItemService(
             toAddHistory.Add(PropCopier.Copy(newItem, new AddItemHistoryModel
             {
                 ItemId = newItem.Id,
-                Action = ActionType.Created.ToString()
+                Action = Actions.Created.ToString()
             }));
         }
 

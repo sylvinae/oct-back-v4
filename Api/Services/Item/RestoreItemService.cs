@@ -54,7 +54,7 @@ public class RestoreItemService(
             toAddHistory.Add(
                 PropCopier.Copy(
                     item,
-                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash, Action = ActionType.Restored.ToString() }
+                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash, Action = Actions.Restored.ToString() }
                 )
             );
         }

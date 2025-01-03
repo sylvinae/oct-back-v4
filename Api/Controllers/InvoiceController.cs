@@ -27,9 +27,9 @@ public class InvoiceController(
     [HttpPost]
     public async Task<IActionResult> CreateInvoice([FromBody] CreateInvoiceModel invoiceModel)
     {
-        var (ok, fail) = await createInvoiceService.CreateInvoice(invoiceModel);
+        var ok = await createInvoiceService.CreateInvoice(invoiceModel);
 
-        return ok ? Ok() : BadRequest(fail!.Errors);
+        return ok ? Ok() : BadRequest();
     }
 
     [Authorize(Roles = "admin,cashier")]

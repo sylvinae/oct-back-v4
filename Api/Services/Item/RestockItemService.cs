@@ -54,7 +54,7 @@ public class RestockItemService(
                 toCreate.Add(newItem);
                 toAddHistory.Add(PropCopier.Copy(item, new AddItemHistoryModel
                 {
-                    ItemId = newItem.Id, Hash = hash, Action = ActionType.Created.ToString()
+                    ItemId = newItem.Id, Hash = hash, Action = Actions.Created.ToString()
                 }));
             }
             else
@@ -64,7 +64,7 @@ public class RestockItemService(
                 item.Stock = existingItem.Stock;
                 toAddHistory.Add(PropCopier.Copy(item,
                     new AddItemHistoryModel
-                        { ItemId = existingItem.Id, Action = ActionType.Restocked.ToString() }));
+                        { ItemId = existingItem.Id, Action = Actions.Restocked.ToString() }));
             }
         }
 

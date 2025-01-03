@@ -242,15 +242,23 @@ namespace API.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     BundleId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: false),
                     Barcode = table.Column<string>(type: "text", nullable: true),
+                    ActionTaken = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BundleHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BundleHistories_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_BundleHistories_Products_BundleId",
                         column: x => x.BundleId,
@@ -454,6 +462,11 @@ namespace API.Migrations
                 name: "IX_BundleHistories_BundleId",
                 table: "BundleHistories",
                 column: "BundleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BundleHistories_UserId",
+                table: "BundleHistories",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BundleItemHistories_BundleId",

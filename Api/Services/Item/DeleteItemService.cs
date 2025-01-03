@@ -55,7 +55,7 @@ public class DeleteItemService(
                 PropCopier.Copy(
                     item,
                     new AddItemHistoryModel
-                        { ItemId = item.Id, Hash = hash, Action = ActionType.Deleted.ToString() }
+                        { ItemId = item.Id, Hash = hash, Action = Actions.Deleted.ToString() }
                 )
             );
         }

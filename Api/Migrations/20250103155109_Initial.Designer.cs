@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20241230192559_Initial")]
+    [Migration("20250103155109_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -30,6 +30,9 @@ namespace API.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActionTaken")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Barcode")
                         .HasColumnType("text");
@@ -51,9 +54,14 @@ namespace API.Migrations
                     b.Property<int>("Stock")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BundleId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("BundleHistories");
                 });
@@ -641,7 +649,15 @@ namespace API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("API.Entities.User.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Bundle");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("API.Entities.Bundles.BundleItemEntity", b =>
