@@ -22,7 +22,7 @@ public class RestockItemService(
         log.LogInformation("Restocking items...");
 
         var toCreate = new List<ItemEntity>();
-        var toAddHistory = new List<AddItemHistoryModel>();
+        var toAddHistory = new List<CreateItemHistoryModel>();
 
         var fails = new List<BulkFailure<CreateRestockItemModel>>();
 
@@ -52,7 +52,7 @@ public class RestockItemService(
                 var newItem = PropCopier.Copy(item,
                     new ItemEntity { Hash = hash, IsLow = item.Stock <= item.LowThreshold });
                 toCreate.Add(newItem);
-                toAddHistory.Add(PropCopier.Copy(item, new AddItemHistoryModel
+                toAddHistory.Add(PropCopier.Copy(item, new CreateItemHistoryModel
                 {
                     ItemId = newItem.Id, Hash = hash, Action = Actions.Created.ToString()
                 }));
@@ -63,7 +63,7 @@ public class RestockItemService(
                 existingItem.Stock += item.Stock;
                 item.Stock = existingItem.Stock;
                 toAddHistory.Add(PropCopier.Copy(item,
-                    new AddItemHistoryModel
+                    new CreateItemHistoryModel
                         { ItemId = existingItem.Id, Action = Actions.Restocked.ToString() }));
             }
         }

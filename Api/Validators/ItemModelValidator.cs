@@ -20,11 +20,15 @@ public class BaseItemModelValidator<T> : AbstractValidator<T>
         RuleFor(x => x.LowThreshold)
             .GreaterThanOrEqualTo(0)
             .WithMessage("LowThreshold must be non-negative.");
-
         RuleFor(x => x.Expiry)
             .Must(BeTodayOrFutureDate)
             .When(x => x.Expiry.HasValue)
             .WithMessage("Expiry must not be a past date.");
+
+        RuleFor(x => x.UsesMax).NotNull().When(x => x.IsReagent)
+            .WithMessage("UsesMax is required since this item is a reagent.");
+        RuleFor(x => x.UsesLeft).NotNull().When(x => x.IsReagent)
+            .WithMessage("UsesLeft is required since this item is a reagent.");
     }
 
     private static bool BeTodayOrFutureDate(DateTime? expiry)

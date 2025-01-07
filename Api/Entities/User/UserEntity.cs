@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using API.Entities.Expense;
 using API.Entities.Invoice;
-using API.Entities.Item;
+using API.Entities.Products;
 using Microsoft.AspNetCore.Identity;
 
 namespace API.Entities.User;
@@ -16,7 +16,8 @@ public class UserEntity : IdentityUser<Guid>
 
     public bool IsDeleted { get; set; }
 
-    public ICollection<InvoiceEntity>? Invoices { get; set; } = [];
-    public ICollection<ExpenseEntity>? Expenses { get; set; } = [];
-    public ICollection<ItemHistoryEntity>? ItemHistories { get; set; } = [];
+    public ICollection<InvoiceEntity> Invoices { get; set; } = [];
+
+    public ICollection<ExpenseEntity> Expenses { get; set; } = [];
+    public ICollection<ProductHistoryEntity> ProductHistories { get; set; } = [];
 }

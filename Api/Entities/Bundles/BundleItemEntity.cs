@@ -14,5 +14,6 @@ public class BundleItemEntity
     [Required] public Guid ItemId { get; set; }
     [ForeignKey("ItemId")] public ItemEntity Item { get; set; } = null!;
 
-    [Required] public int Quantity { get; set; }
+    public int Quantity { get; set; }
+    public int Uses { get; set; }
 }

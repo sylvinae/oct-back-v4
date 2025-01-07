@@ -9,20 +9,8 @@ public class Cryptics
     {
         var propertiesToInclude = new[]
         {
-            "Barcode",
-            "Brand",
-            "Generic",
-            "Classification",
-            "Formulation",
-            "Location",
-            "WholesalePrice",
-            "RetailPrice",
-            "LowThreshold",
-            "Company",
-            "HasExpiry",
-            "Expiry",
-            "IsReagent",
-            "IsExpired",
+            "Barcode", "Brand", "Generic", "Classification", "Formulation", "Location", "WholesalePrice", "RetailPrice",
+            "LowThreshold", "Company", "HasExpiry", "Expiry", "IsReagent", "UsesLeft", "UsesMax", "IsExpired",
             "IsDeleted"
         };
 

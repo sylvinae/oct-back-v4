@@ -14,17 +14,15 @@ public class ItemEntity : ProductEntity
     public string? Location { get; set; }
     public string? Company { get; set; }
     [Required] [Precision(18, 2)] public decimal WholesalePrice { get; set; }
-
-    [Required] public string Hash { get; set; } = null!;
-
     public int LowThreshold { get; set; }
 
     [Column(TypeName = "timestamp without time zone")]
     public DateTime? Expiry { get; set; }
 
     public bool IsReagent { get; set; }
+    public int? UsesLeft { get; set; }
+    public int? UsesMax { get; set; }
+    [Required] public string Hash { get; set; } = null!;
     public bool IsLow { get; set; }
     public bool IsExpired { get; set; }
-
-    public ICollection<ItemHistoryEntity> ItemHistory { get; set; } = new List<ItemHistoryEntity>();
 }

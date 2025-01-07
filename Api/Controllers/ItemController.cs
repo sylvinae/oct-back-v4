@@ -45,18 +45,12 @@ public class ItemController(
 
     [Authorize(Roles = "admin")]
     [HttpPut]
-    public async Task<IActionResult> UpdateItems([FromBody] List<UpdateItemModel> items)
+    public async Task<IActionResult> UpdateItems([FromBody] UpdateItemModel item)
     {
-        if (items.Count == 0)
-            return BadRequest();
+        var fail = await u.UpdateItem(item);
 
-        var fails = await u.UpdateItems(items);
-
-        if (fails is { Count: > 0 })
-            return BadRequest(fails);
-
-        if (fails is { Count: > 0 })
-            return StatusCode(207, fails);
+        if (fail is null)
+            return BadRequest(fail);
 
         return Ok();
     }

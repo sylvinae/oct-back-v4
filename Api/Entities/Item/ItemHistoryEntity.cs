@@ -1,50 +1,28 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using API.Entities.User;
+using API.Entities.Products;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Entities.Item;
 
-public class ItemHistoryEntity
+public class ItemHistoryEntity : ProductHistoryEntity
 {
-    [Key] public Guid Id { get; set; } = Guid.NewGuid();
-
-    [Required] public Guid ItemId { get; set; }
-
-    [ForeignKey("ItemId")] public ItemEntity Item { get; set; } = null!;
-
-    [Required] public Guid UserId { get; set; }
-
-    [ForeignKey("UserId")] public UserEntity User { get; set; } = null!;
-
-    [MaxLength(50)] public string? Barcode { get; set; }
-    [MaxLength(50)] public string? Brand { get; set; }
-    [MaxLength(50)] public string? Generic { get; set; }
-    [MaxLength(50)] public string? Classification { get; set; }
-    [MaxLength(50)] public string? Formulation { get; set; }
-    [MaxLength(50)] public string? Location { get; set; }
-    [MaxLength(50)] public string? Company { get; set; }
-
+    public string? Brand { get; set; }
+    public string? Generic { get; set; }
+    public string? Classification { get; set; }
+    public string? Formulation { get; set; }
+    public string? Location { get; set; }
+    public string? Company { get; set; }
     [Precision(18, 2)] public decimal WholesalePrice { get; set; }
-    [Precision(18, 2)] public decimal RetailPrice { get; set; }
-    [Required] public int Stock { get; set; }
     [Required] public int LowThreshold { get; set; }
-
-    public bool HasExpiry { get; set; }
 
     [Column(TypeName = "timestamp without time zone")]
     public DateTime? Expiry { get; set; }
 
     public bool IsReagent { get; set; }
-    public bool IsDeleted { get; set; }
 
-    [MaxLength(64)] [Required] public string Hash { get; set; } = null!;
+    [Required] public string Hash { get; set; } = null!;
 
     public bool IsLow { get; set; }
     public bool IsExpired { get; set; }
-
-    [Column(TypeName = "timestamp without time zone")]
-    public DateTime? ActionTaken { get; set; } = DateTime.Now;
-
-    [MaxLength(50)] public string Action { get; set; } = null!;
 }

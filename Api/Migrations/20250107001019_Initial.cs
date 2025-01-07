@@ -73,10 +73,12 @@ namespace API.Migrations
                     Location = table.Column<string>(type: "text", nullable: true),
                     Company = table.Column<string>(type: "text", nullable: true),
                     WholesalePrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                    Hash = table.Column<string>(type: "text", nullable: true),
                     LowThreshold = table.Column<int>(type: "integer", nullable: true),
                     Expiry = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     IsReagent = table.Column<bool>(type: "boolean", nullable: true),
+                    UsesLeft = table.Column<int>(type: "integer", nullable: true),
+                    UsesMax = table.Column<int>(type: "integer", nullable: true),
+                    Hash = table.Column<string>(type: "text", nullable: true),
                     IsLow = table.Column<bool>(type: "boolean", nullable: true),
                     IsExpired = table.Column<bool>(type: "boolean", nullable: true)
                 },
@@ -237,37 +239,6 @@ namespace API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BundleHistories",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    BundleId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    Stock = table.Column<int>(type: "integer", nullable: false),
-                    Barcode = table.Column<string>(type: "text", nullable: true),
-                    ActionTaken = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BundleHistories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_BundleHistories_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_BundleHistories_Products_BundleId",
-                        column: x => x.BundleId,
-                        principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "BundleItemHistories",
                 columns: table => new
                 {
@@ -309,7 +280,8 @@ namespace API.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     BundleId = table.Column<Guid>(type: "uuid", nullable: false),
                     ItemId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false)
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    Uses = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -329,45 +301,46 @@ namespace API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ItemHistories",
+                name: "ProductHistories",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ItemId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Barcode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Brand = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Generic = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Classification = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Formulation = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Location = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Company = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    WholesalePrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Barcode = table.Column<string>(type: "text", nullable: true),
                     RetailPrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: false),
-                    LowThreshold = table.Column<int>(type: "integer", nullable: false),
-                    HasExpiry = table.Column<bool>(type: "boolean", nullable: false),
-                    Expiry = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    IsReagent = table.Column<bool>(type: "boolean", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
-                    Hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    IsLow = table.Column<bool>(type: "boolean", nullable: false),
-                    IsExpired = table.Column<bool>(type: "boolean", nullable: false),
-                    ActionTaken = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
-                    Action = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                    Action = table.Column<string>(type: "text", nullable: false),
+                    ActionTaken = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    Discriminator = table.Column<string>(type: "character varying(21)", maxLength: 21, nullable: false),
+                    BundleName = table.Column<string>(type: "text", nullable: true),
+                    Brand = table.Column<string>(type: "text", nullable: true),
+                    Generic = table.Column<string>(type: "text", nullable: true),
+                    Classification = table.Column<string>(type: "text", nullable: true),
+                    Formulation = table.Column<string>(type: "text", nullable: true),
+                    Location = table.Column<string>(type: "text", nullable: true),
+                    Company = table.Column<string>(type: "text", nullable: true),
+                    WholesalePrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
+                    LowThreshold = table.Column<int>(type: "integer", nullable: true),
+                    Expiry = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    IsReagent = table.Column<bool>(type: "boolean", nullable: true),
+                    Hash = table.Column<string>(type: "text", nullable: true),
+                    IsLow = table.Column<bool>(type: "boolean", nullable: true),
+                    IsExpired = table.Column<bool>(type: "boolean", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ItemHistories", x => x.Id);
+                    table.PrimaryKey("PK_ProductHistories", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ItemHistories_AspNetUsers_UserId",
+                        name: "FK_ProductHistories_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ItemHistories_Products_ItemId",
-                        column: x => x.ItemId,
+                        name: "FK_ProductHistories_Products_ProductId",
+                        column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -459,16 +432,6 @@ namespace API.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_BundleHistories_BundleId",
-                table: "BundleHistories",
-                column: "BundleId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BundleHistories_UserId",
-                table: "BundleHistories",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_BundleItemHistories_BundleId",
                 table: "BundleItemHistories",
                 column: "BundleId");
@@ -519,13 +482,13 @@ namespace API.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemHistories_ItemId",
-                table: "ItemHistories",
-                column: "ItemId");
+                name: "IX_ProductHistories_ProductId",
+                table: "ProductHistories",
+                column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemHistories_UserId",
-                table: "ItemHistories",
+                name: "IX_ProductHistories_UserId",
+                table: "ProductHistories",
                 column: "UserId");
         }
 
@@ -548,9 +511,6 @@ namespace API.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "BundleHistories");
-
-            migrationBuilder.DropTable(
                 name: "BundleItemHistories");
 
             migrationBuilder.DropTable(
@@ -563,7 +523,7 @@ namespace API.Migrations
                 name: "InvoiceItems");
 
             migrationBuilder.DropTable(
-                name: "ItemHistories");
+                name: "ProductHistories");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
