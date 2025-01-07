@@ -21,7 +21,7 @@ public class CreateItemService(
         log.LogInformation("Creating items...");
 
         var toCreate = new List<ItemEntity>(); // Using ItemEntity
-        var toAddHistory = new List<AddItemHistoryModel>();
+        var toAddHistory = new List<CreateItemHistoryModel>();
         var fails = new List<BulkFailure<CreateItemModel>>();
         var itemHashes = items.Select(Cryptics.ComputeHash).ToHashSet();
 
@@ -64,7 +64,7 @@ public class CreateItemService(
             });
 
             toCreate.Add(newItem);
-            toAddHistory.Add(PropCopier.Copy(newItem, new AddItemHistoryModel
+            toAddHistory.Add(PropCopier.Copy(newItem, new CreateItemHistoryModel
             {
                 ItemId = newItem.Id,
                 Action = Actions.Created.ToString()

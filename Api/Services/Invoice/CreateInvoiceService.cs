@@ -23,8 +23,7 @@ public class CreateInvoiceService(
     UserManager<UserEntity> userManager,
     IHttpContextAccessor httpContextAccessor) : ICreateInvoiceService
 {
-    public async Task<bool> CreateInvoice(
-        CreateInvoiceModel invoice)
+    public async Task<BulkFailure<CreateInvoiceModel>> CreateInvoice(CreateInvoiceModel invoice)
     {
         log.LogInformation("Create invoice called.");
         var user = await userManager.GetUserAsync(httpContextAccessor.HttpContext!.User);
@@ -32,54 +31,99 @@ public class CreateInvoiceService(
         var newInvoiceEntity = PropCopier.Copy(invoice, new InvoiceEntity
             { UserId = user!.Id, IsVoided = false });
         var newInvoiceItemsEntity = new List<InvoiceItemEntity>();
-        var toAddHistory = new List<AddItemHistoryModel>();
+        var toAddHistory = new List<CreateItemHistoryModel>();
+        var errors = new Dictionary<string, string>();
 
-        var isValid = await createValidator.ValidateAsync(invoice);
-        if (!isValid.IsValid)
-            return false;
+        var validationResult = await createValidator.ValidateAsync(invoice);
+        if (!validationResult.IsValid)
+        {
+            foreach (var error in validationResult.Errors) errors[error.PropertyName] = error.ErrorMessage;
+            return new BulkFailure<CreateInvoiceModel> { Input = invoice, Errors = errors };
+        }
+
 
         foreach (var item in invoice.InvoiceItems)
         {
-            var result = true;
             var product = await db.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId);
             if (product == null)
-                throw new Exception();
+            {
+                errors[item.ProductId.ToString()] = "Product not found.";
+                return new BulkFailure<CreateInvoiceModel> { Input = invoice, Errors = errors };
+            }
 
             newInvoiceItemsEntity.Add(PropCopier.Copy(item,
                 new InvoiceItemEntity { InvoiceId = newInvoiceEntity.Id, PurchasePrice = product.RetailPrice }
             ));
 
-            if (product is ItemEntity i)
-                result = ProductMod(i, item.ItemsSold, toAddHistory);
+            bool result;
+            if (product is ItemEntity itemEntity)
+            {
+                result = ProductMod(itemEntity, toAddHistory, item.QuantitySold);
+                if (result || itemEntity.Stock >= item.QuantitySold) continue;
+                errors[item.ProductId.ToString()] = "Not enough stock.";
+                return new BulkFailure<CreateInvoiceModel> { Input = invoice, Errors = errors };
+            }
 
-            else if (product is BundleEntity b) result = await BundleMod(b, toAddHistory);
+            if (product is BundleEntity bundleEntity)
+            {
+                result = await BundleMod(bundleEntity, toAddHistory);
+                if (result) continue;
+                errors[item.ProductId.ToString()] = "Not enough stock in bundle items.";
+                return new BulkFailure<CreateInvoiceModel> { Input = invoice, Errors = errors };
+            }
 
-            if (!result)
-                throw new Exception();
+            errors[item.ProductId.ToString()] = "Unknown product type.";
+            return new BulkFailure<CreateInvoiceModel> { Input = invoice, Errors = errors };
         }
 
         newInvoiceEntity.InvoiceItems = newInvoiceItemsEntity;
 
-        await db.Invoices.AddAsync(newInvoiceEntity);
-        await ih.AddItemHistoryRange(toAddHistory);
+        try
+        {
+            await db.Invoices.AddAsync(newInvoiceEntity);
+            await ih.AddItemHistoryRange(toAddHistory);
+            await db.SaveChangesAsync();
 
-        await db.SaveChangesAsync();
-        return true;
+            return new BulkFailure<CreateInvoiceModel>
+                { Input = invoice, Errors = new Dictionary<string, string>() };
+        }
+        catch (Exception ex)
+        {
+            log.LogError("Error saving invoice: {ex}", ex);
+            errors["SaveInvoice"] = ex.Message;
+            return new BulkFailure<CreateInvoiceModel> { Input = invoice, Errors = errors };
+        }
     }
 
-    private bool ProductMod(ItemEntity item, int quantity, List<AddItemHistoryModel> toAddHistory)
+
+    private bool ProductMod(ItemEntity item, List<CreateItemHistoryModel> toAddHistory, int quantity = 0,
+        int usesConsumed = 0)
     {
         try
         {
-            item.Stock -= quantity;
-            item.IsLow = item.Stock <= item.LowThreshold;
-            var newHash = Cryptics.ComputeHash(item);
+            if (quantity == 0 && usesConsumed == 0) return false;
 
+            if (quantity > 0)
+            {
+                item.Stock -= quantity;
+                item.IsLow = item.Stock <= item.LowThreshold;
+            }
+            else if (usesConsumed > 0)
+            {
+                ProcessUsesConsumption(item, ref usesConsumed);
+            }
+
+            if (item.Stock <= 0 && usesConsumed > 0)
+                log.LogWarning(
+                    "Insufficient stock to consume all requested uses for item {itemId}. Remaining uses: {remainingUses}.",
+                    item.Id, usesConsumed);
+
+            var newHash = Cryptics.ComputeHash(item);
             item.Hash = newHash;
 
             toAddHistory.Add(
                 PropCopier.Copy(item,
-                    new AddItemHistoryModel { ItemId = item.Id, Action = Actions.Purchased.ToString() }));
+                    new CreateItemHistoryModel { ItemId = item.Id, Action = Actions.Purchased.ToString() }));
 
             return true;
         }
@@ -90,7 +134,36 @@ public class CreateInvoiceService(
         }
     }
 
-    private async Task<bool> BundleMod(BundleEntity bundle, List<AddItemHistoryModel> toAddHistory)
+    private static void ProcessUsesConsumption(ItemEntity item, ref int usesConsumed)
+    {
+        while (usesConsumed > 0 && item.Stock > 0)
+        {
+            if (item.UsesLeft == 0)
+            {
+                if (item.Stock > 0)
+                {
+                    item.Stock--;
+                    item.IsLow = item.Stock <= item.LowThreshold;
+                }
+
+                item.UsesLeft = item.UsesMax;
+            }
+
+            if (item.UsesLeft > 0)
+            {
+                var usesToDeduct = Math.Min(usesConsumed, item.UsesLeft.GetValueOrDefault());
+                item.UsesLeft -= usesToDeduct;
+                usesConsumed -= usesToDeduct;
+            }
+
+            if (item.UsesLeft != 0 || item.Stock <= 0) continue;
+            item.Stock--;
+            item.IsLow = item.Stock <= item.LowThreshold;
+        }
+    }
+
+
+    private async Task<bool> BundleMod(BundleEntity bundle, List<CreateItemHistoryModel> toAddHistory)
     {
         var bundleItems = await db.BundleItems
             .Where(b => b.BundleId == bundle.Id)
@@ -112,7 +185,7 @@ public class CreateInvoiceService(
                 return false;
             }
 
-            var result = ProductMod(item, bundleItem.Quantity, toAddHistory);
+            var result = ProductMod(item, toAddHistory, bundleItem.Quantity, bundleItem.Uses);
             if (!result)
                 return false;
         }

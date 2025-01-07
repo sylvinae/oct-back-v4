@@ -4,6 +4,6 @@ namespace API.Services.Item.Interfaces;
 
 public interface IItemHistoryService
 {
-    Task<bool> AddItemHistory(AddItemHistoryModel itemHistory);
-    Task<bool> AddItemHistoryRange(List<AddItemHistoryModel> itemHistory);
+    Task<bool> AddItemHistory(CreateItemHistoryModel itemHistory);
+    Task<bool> AddItemHistoryRange(List<CreateItemHistoryModel> itemHistory);
 }

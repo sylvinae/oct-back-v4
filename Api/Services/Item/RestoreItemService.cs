@@ -22,7 +22,7 @@ public class RestoreItemService(
         var existingItemIds = items.Select(item => item.Id).ToHashSet();
 
         var fails = new List<BulkFailure<Guid>>();
-        var toAddHistory = new List<AddItemHistoryModel>();
+        var toAddHistory = new List<CreateItemHistoryModel>();
 
         foreach (var id in itemIds)
         {
@@ -54,7 +54,7 @@ public class RestoreItemService(
             toAddHistory.Add(
                 PropCopier.Copy(
                     item,
-                    new AddItemHistoryModel { ItemId = item.Id, Hash = hash, Action = Actions.Restored.ToString() }
+                    new CreateItemHistoryModel { ItemId = item.Id, Hash = hash, Action = Actions.Restored.ToString() }
                 )
             );
         }

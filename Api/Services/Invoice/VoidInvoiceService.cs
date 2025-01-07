@@ -1,4 +1,5 @@
 using API.Db;
+using API.Entities.Bundles;
 using API.Entities.Item;
 using API.Models;
 using API.Models.Invoice;
@@ -20,6 +21,7 @@ public class VoidInvoiceService(
     {
         try
         {
+            var toAddHistory = new List<CreateItemHistoryModel>();
             log.LogInformation("Void Interfaces called.");
             var invoiceEntity =
                 await db.Invoices.Include(i => i.InvoiceItems).FirstOrDefaultAsync(i => i.Id == invoice.Id);
@@ -31,15 +33,8 @@ public class VoidInvoiceService(
             invoiceEntity.VoidReason = invoice.VoidReason;
 
 
-            foreach (var item in invoiceEntity.InvoiceItems)
-            {
-                log.LogInformation("Returning item {x}", item.Id);
-
-                var itemMod = ItemMod(item.ProductId, item.QuantitySold);
-
-                if (!itemMod.Result) return false;
-            }
-
+            foreach (var item in invoiceEntity.InvoiceItems) log.LogInformation("Returning item {x}", item.Id);
+            // return result;
 
             await db.SaveChangesAsync();
             return true;
@@ -51,38 +46,57 @@ public class VoidInvoiceService(
         }
     }
 
-    private async Task<bool> ItemMod(Guid itemId, int quantity)
+
+    private bool ProductMod(ItemEntity item, int quantity, List<CreateItemHistoryModel> toAddHistory)
     {
-        const Actions action = Actions.Voided;
         try
         {
-            log.LogInformation("Modding item {x} with action {action}.", itemId, action);
+            item.Stock -= quantity;
+            item.IsLow = item.Stock <= item.LowThreshold;
+            var newHash = Cryptics.ComputeHash(item);
 
-            var product = await db.Products.OfType<ItemEntity>().FirstOrDefaultAsync(p => p.Id == itemId);
-            if (product == null)
-            {
-                log.LogWarning("Interfaces {x} not found.", itemId);
-                return false;
-            }
+            item.Hash = newHash;
 
-            product.Stock += quantity;
-
-
-            var newHash = Cryptics.ComputeHash(product);
-            product.Hash = newHash;
-
-            log.LogInformation("Adding {x} history to {y}", action, product);
-            await ih.AddItemHistory(
-                PropCopier.Copy(product,
-                    new AddItemHistoryModel { ItemId = product.Id, Action = Actions.Voided.ToString() })
-            );
+            toAddHistory.Add(
+                PropCopier.Copy(item,
+                    new CreateItemHistoryModel { ItemId = item.Id, Action = Actions.Purchased.ToString() }));
 
             return true;
         }
         catch (Exception ex)
         {
-            log.LogError("Error modding item {x}. Exception: {ex}", itemId, ex);
+            log.LogError("Error modding item {x}. Exception: {ex}", item.Id, ex);
             return false;
         }
+    }
+
+    private async Task<bool> BundleMod(BundleEntity bundle, List<CreateItemHistoryModel> toAddHistory)
+    {
+        var bundleItems = await db.BundleItems
+            .Where(b => b.BundleId == bundle.Id)
+            .ToListAsync();
+
+        if (bundleItems.Count == 0)
+            return false;
+
+        var itemIds = bundleItems.Select(b => b.ItemId).Distinct().ToList();
+        var items = await db.Products.OfType<ItemEntity>()
+            .Where(i => itemIds.Contains(i.Id))
+            .ToDictionaryAsync(i => i.Id);
+
+        foreach (var bundleItem in bundleItems)
+        {
+            if (!items.TryGetValue(bundleItem.ItemId, out var item))
+            {
+                log.LogWarning("Item with ID {ItemId} not found for bundle {BundleId}.", bundleItem.ItemId, bundle.Id);
+                return false;
+            }
+
+            var result = ProductMod(item, bundleItem.Quantity, toAddHistory);
+            if (!result)
+                return false;
+        }
+
+        return true;
     }
 }

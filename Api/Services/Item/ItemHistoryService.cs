@@ -15,13 +15,13 @@ public class ItemHistoryService(
     IHttpContextAccessor httpContextAccessor
 ) : IItemHistoryService
 {
-    public async Task<bool> AddItemHistory(AddItemHistoryModel itemHistory)
+    public async Task<bool> AddItemHistory(CreateItemHistoryModel itemHistory)
     {
         try
         {
             var entities = CreateItemHistoryEntities([itemHistory]);
 
-            await db.ItemHistories.AddAsync(entities.First());
+            await db.ProductHistories.AddAsync(entities.First());
             log.LogInformation(
                 "Added {action} history to item {id}", itemHistory.Action, itemHistory.ItemId
             );
@@ -35,13 +35,13 @@ public class ItemHistoryService(
         }
     }
 
-    public async Task<bool> AddItemHistoryRange(List<AddItemHistoryModel> itemHistory)
+    public async Task<bool> AddItemHistoryRange(List<CreateItemHistoryModel> itemHistory)
     {
         try
         {
             var entities = CreateItemHistoryEntities(itemHistory);
 
-            await db.ItemHistories.AddRangeAsync(entities);
+            await db.ProductHistories.AddRangeAsync(entities);
             log.LogInformation("Added item history for {count} items.", itemHistory.Count);
 
             return true;
@@ -53,7 +53,7 @@ public class ItemHistoryService(
         }
     }
 
-    private List<ItemHistoryEntity> CreateItemHistoryEntities(List<AddItemHistoryModel> itemHistory)
+    private List<ItemHistoryEntity> CreateItemHistoryEntities(List<CreateItemHistoryModel> itemHistory)
     {
         var user = userManager.GetUserAsync(httpContextAccessor.HttpContext!.User).Result;
 
@@ -61,7 +61,7 @@ public class ItemHistoryService(
         {
             var entity = new ItemHistoryEntity
             {
-                ItemId = item.ItemId,
+                ProductId = item.ItemId,
                 UserId = user!.Id,
                 Hash = item.Hash,
                 Action = item.Action!

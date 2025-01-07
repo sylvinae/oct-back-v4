@@ -16,51 +16,54 @@ public class UpdateItemService(
     IValidator<UpdateItemModel> updateValidator
 ) : IUpdateItemService
 {
-    public async Task<List<BulkFailure<UpdateItemModel>>?
-    > UpdateItems(
-        List<UpdateItemModel> items)
+    public async Task<BulkFailure<UpdateItemModel>?> UpdateItem(UpdateItemModel item)
     {
-        log.LogInformation("Updating items...");
-        var toAddHistory = new List<AddItemHistoryModel>();
-        var fails = new List<BulkFailure<UpdateItemModel>>();
+        log.LogInformation("Updating item with ID: {ItemId}", item.Id);
 
-        foreach (var item in items)
+
+        var validationResult = await updateValidator.ValidateAsync(item);
+        if (!validationResult.IsValid)
+            return new BulkFailure<UpdateItemModel>
+            {
+                Input = item,
+                Errors = validationResult.Errors.ToDictionary(e => e.PropertyName, e => e.ErrorMessage)
+            };
+
+
+        var existingItem = await db.Products.OfType<ItemEntity>().FirstOrDefaultAsync(i => i.Id == item.Id);
+
+        if (existingItem == null)
+            return new BulkFailure<UpdateItemModel>
+            {
+                Input = item,
+                Errors = new Dictionary<string, string> { { "Id", "Item not found." } }
+            };
+
+
+        var hash = Cryptics.ComputeHash(item);
+        existingItem.Hash = hash;
+        db.Entry(existingItem).CurrentValues.SetValues(item);
+
+
+        var history = PropCopier.Copy(existingItem,
+            new CreateItemHistoryModel { ItemId = existingItem.Id, Action = Actions.Updated.ToString() });
+
+        await ih.AddItemHistory(history);
+
+        try
         {
-            var isValid = await updateValidator.ValidateAsync(item);
-            if (!isValid.IsValid)
-            {
-                fails.Add(new BulkFailure<UpdateItemModel>
-                {
-                    Input = item,
-                    Errors = isValid.Errors.ToDictionary(e => e.PropertyName, e => e.ErrorMessage)
-                });
-                continue;
-            }
-
-            var existingItem = await db.Products.OfType<ItemEntity>().FirstOrDefaultAsync(i => i.Id == item.Id);
-
-            if (existingItem == null)
-            {
-                fails.Add(new BulkFailure<UpdateItemModel>
-                {
-                    Input = item,
-                    Errors = isValid.Errors.ToDictionary(e => e.PropertyName, e => e.ErrorMessage)
-                });
-                continue;
-            }
-
-            var hash = Cryptics.ComputeHash(item);
-            existingItem.Hash = hash;
-            db.Entry(existingItem).CurrentValues.SetValues(item);
-            toAddHistory.Add(PropCopier.Copy(existingItem,
-                new AddItemHistoryModel { ItemId = existingItem.Id, Action = Actions.Updated.ToString() })
-            );
+            await db.SaveChangesAsync();
+            log.LogInformation("Item with ID: {ItemId} successfully updated.", item.Id);
+            return null;
         }
-
-        if (toAddHistory.Count == 0) return fails;
-        await ih.AddItemHistoryRange(toAddHistory);
-        await db.SaveChangesAsync();
-        log.LogInformation("Updated {x} items.", items.Count);
-        return fails;
+        catch (Exception ex)
+        {
+            log.LogError("Error updating item with ID: {ItemId}. Exception: {Exception}", item.Id, ex);
+            return new BulkFailure<UpdateItemModel>
+            {
+                Input = item,
+                Errors = new Dictionary<string, string> { { "SaveChanges", ex.Message } }
+            };
+        }
     }
 }

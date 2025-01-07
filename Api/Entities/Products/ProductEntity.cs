@@ -12,4 +12,5 @@ public class ProductEntity
     [Required] public int Stock { get; set; }
     public bool IsDeleted { get; set; }
     public ICollection<InvoiceItemEntity> InvoiceItems { get; set; } = (List<InvoiceItemEntity>) [];
+    public ICollection<ProductHistoryEntity> ProductHistories { get; set; } = (List<ProductHistoryEntity>) [];
 }
