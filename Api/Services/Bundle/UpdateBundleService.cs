@@ -2,8 +2,6 @@ using API.Db;
 using API.Entities.Bundles;
 using API.Models.Bundles;
 using API.Services.Bundle.Interfaces;
-using API.Services.Item;
-using API.Services.Item.Interfaces;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,8 +9,7 @@ namespace API.Services.Bundle;
 
 public class UpdateBundleService(
     Context db,
-    ILogger<UpdateItemService> log,
-    IItemHistoryService ih,
+    ILogger<UpdateBundleService> log,
     IValidator<UpdateBundleModel> updateValidator) : IUpdateBundleService
 {
     public async Task<bool> UpdateBundle(UpdateBundleModel bundle)
@@ -21,46 +18,47 @@ public class UpdateBundleService(
 
         var validationResult = await updateValidator.ValidateAsync(bundle);
         if (!validationResult.IsValid)
+        {
+            log.LogInformation("Validation failed");
+            foreach (var error in validationResult.Errors)
+                log.LogInformation("Validation error: {x}", error.ErrorMessage);
+
             return false;
+        }
 
         var existingBundle = await db.Products.OfType<BundleEntity>()
             .Include(b => b.BundleItems)
             .FirstOrDefaultAsync(b => b.Id == bundle.Id);
 
         if (existingBundle == null)
+        {
+            log.LogInformation("Bundle not found");
             return false;
-
-        var currentItems = existingBundle.BundleItems.ToDictionary(bi => bi.ItemId);
-        var updatedItems = bundle.Items.ToDictionary(ui => ui.ItemId);
-
-        foreach (var updatedItem in updatedItems.Values)
-            if (!currentItems.TryGetValue(updatedItem.ItemId, out var existingItem))
-            {
-                existingBundle.BundleItems.Add(new BundleItemEntity
-                {
-                    BundleId = bundle.Id,
-                    ItemId = updatedItem.ItemId,
-                    Quantity = updatedItem.Quantity,
-                    Uses = updatedItem.Uses
-                });
-            }
-            else if (existingItem.Quantity != updatedItem.Quantity || existingItem.Uses != updatedItem.Uses)
-            {
-                existingItem.Quantity = updatedItem.Quantity;
-                existingItem.Uses = updatedItem.Uses;
-            }
-
-        foreach (var currentItem in currentItems.Values.Where(currentItem =>
-                     !updatedItems.ContainsKey(currentItem.ItemId)))
-            existingBundle.BundleItems.Remove(currentItem);
-
+        }
 
         existingBundle.BundleName = bundle.BundleName;
         existingBundle.RetailPrice = bundle.RetailPrice;
         existingBundle.Barcode = bundle.Barcode;
+        log.LogInformation("removing");
 
+        db.BundleItems.RemoveRange(existingBundle.BundleItems);
 
+        log.LogInformation("removed");
+        var newBundleItems = bundle.BundleItems.Select(bi => new BundleItemEntity
+        {
+            BundleId = bundle.Id,
+            ItemId = bi.ItemId,
+            Quantity = bi.Quantity,
+            Uses = bi.Uses
+        }).ToList();
+
+        log.LogInformation("made new bundleitems");
+        log.LogInformation("added new items");
+
+        db.BundleItems.AddRange(newBundleItems);
         await db.SaveChangesAsync();
+
+        log.LogInformation("Bundle updated successfully");
         return true;
     }
 }

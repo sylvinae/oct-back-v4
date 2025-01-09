@@ -23,8 +23,19 @@ public class CreateBundleService(
         {
             var bundle = PropCopier.Copy(createBundle, new BundleEntity { IsDeleted = false });
 
-            foreach (var item in createBundle.Items)
-                bundle.BundleItems.Add(PropCopier.Copy(item, new BundleItemEntity { BundleId = bundle.Id }));
+            foreach (var thing in
+                     createBundle.BundleItems.Select(item => PropCopier.Copy(item, new BundleItemEntity())))
+            {
+                thing.BundleId = bundle.Id;
+                bundle.BundleItems.Add(thing);
+            }
+            // foreach (var item in createBundle.BundleItems)
+            // {
+            //     var thing = PropCopier.Copy(item, new BundleItemEntity());
+            //     thing.BundleId = bundle.Id;
+            //     bundle.BundleItems.Add(thing);
+            //     // bundle.BundleItems.Add(PropCopier.Copy(item, new BundleItemEntity { BundleId = bundle.Id }));
+            // }
 
             await db.Products.AddAsync(bundle);
             await db.SaveChangesAsync();

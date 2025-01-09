@@ -6,7 +6,7 @@ public class BaseBundleModel
     public decimal RetailPrice { get; set; }
     public int Stock { get; set; }
     public string? Barcode { get; set; }
-    public List<BundleItemModel> Items { get; set; } = [];
+    public List<BundleItemModel> BundleItems { get; set; } = [];
 }
 
 public class CreateBundleModel : BaseBundleModel;

@@ -10,7 +10,7 @@ public class BaseBundleModelValidator<T> : AbstractValidator<T> where T : BaseBu
         RuleFor(x => x.BundleName).NotEmpty().WithMessage("Bundle name cannot be empty.");
         RuleFor(x => x.RetailPrice).NotEmpty().GreaterThanOrEqualTo(0)
             .WithMessage("Retail price must be non-negative.");
-        RuleFor(x => x.Items).NotEmpty().WithMessage("Bundle items are required");
+        RuleFor(x => x.BundleItems).NotEmpty().WithMessage("Bundle items are required");
     }
 }
 
