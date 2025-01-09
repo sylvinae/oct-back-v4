@@ -18,8 +18,7 @@ public class UpdateItemService(
 {
     public async Task<BulkFailure<UpdateItemModel>?> UpdateItem(UpdateItemModel item)
     {
-        log.LogInformation("Updating item with ID: {ItemId}", item.Id);
-
+        log.LogInformation("Updating product {ItemId}", item.Id);
 
         var validationResult = await updateValidator.ValidateAsync(item);
         if (!validationResult.IsValid)
@@ -36,7 +35,7 @@ public class UpdateItemService(
             return new BulkFailure<UpdateItemModel>
             {
                 Input = item,
-                Errors = new Dictionary<string, string> { { "Id", "Item not found." } }
+                Errors = new Dictionary<string, string> { { item.Id.ToString(), "Item not found." } }
             };
 
 

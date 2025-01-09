@@ -8,7 +8,7 @@ namespace API.Controllers;
 
 [Route("api/bundles")]
 [ApiController]
-public class BundleController(ICreateBundleService c, IGetBundleService g) : ControllerBase
+public class BundleController(ICreateBundleService c, IGetBundleService g, IUpdateBundleService u) : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> CreateBundle([FromBody] CreateBundleModel bundle)
@@ -17,6 +17,15 @@ public class BundleController(ICreateBundleService c, IGetBundleService g) : Con
         if (ok) return Ok();
         return BadRequest();
     }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateBundle([FromBody] UpdateBundleModel updateModel)
+    {
+        var ok = await u.UpdateBundle(updateModel);
+        if (ok) return Ok();
+        return BadRequest();
+    }
+
 
     [HttpGet]
     [EnableQuery]

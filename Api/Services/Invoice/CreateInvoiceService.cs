@@ -110,7 +110,7 @@ public class CreateInvoiceService(
             }
             else if (usesConsumed > 0)
             {
-                ProcessUsesConsumption(item, ref usesConsumed);
+                ProcessUsesConsumption(item, usesConsumed);
             }
 
             if (item.Stock <= 0 && usesConsumed > 0)
@@ -134,7 +134,7 @@ public class CreateInvoiceService(
         }
     }
 
-    private static void ProcessUsesConsumption(ItemEntity item, ref int usesConsumed)
+    private static void ProcessUsesConsumption(ItemEntity item, int usesConsumed)
     {
         while (usesConsumed > 0 && item.Stock > 0)
         {
@@ -162,30 +162,24 @@ public class CreateInvoiceService(
         }
     }
 
-
     private async Task<bool> BundleMod(BundleEntity bundle, List<CreateItemHistoryModel> toAddHistory)
     {
-        var bundleItems = await db.BundleItems
+        var bundleItemsWithProducts = await db.BundleItems
             .Where(b => b.BundleId == bundle.Id)
+            .Select(b => new
+            {
+                b.Item,
+                b.Quantity,
+                b.Uses
+            })
             .ToListAsync();
 
-        if (bundleItems.Count == 0)
+        if (bundleItemsWithProducts.Count == 0)
             return false;
 
-        var itemIds = bundleItems.Select(b => b.ItemId).Distinct().ToList();
-        var items = await db.Products.OfType<ItemEntity>()
-            .Where(i => itemIds.Contains(i.Id))
-            .ToDictionaryAsync(i => i.Id);
-
-        foreach (var bundleItem in bundleItems)
+        foreach (var bundleItem in bundleItemsWithProducts)
         {
-            if (!items.TryGetValue(bundleItem.ItemId, out var item))
-            {
-                log.LogWarning("Item with ID {ItemId} not found for bundle {BundleId}.", bundleItem.ItemId, bundle.Id);
-                return false;
-            }
-
-            var result = ProductMod(item, toAddHistory, bundleItem.Quantity, bundleItem.Uses);
+            var result = ProductMod(bundleItem.Item, toAddHistory, bundleItem.Quantity, bundleItem.Uses);
             if (!result)
                 return false;
         }
